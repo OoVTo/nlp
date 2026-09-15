@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ambiguity Flashcards — Decoding Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ece8df;
+    --paper-raised:#f4f1e9;
+    --ink:#20241f;
+    --ink-soft:#54554c;
+    --rule:#c9c3b3;
+    --accent:#2f7f74;
+    --wrong:#b0395a;
+    --right:#3f7d3a;
+    --lexical:#c1791f;
+    --syntactic:#2f7f74;
+    --semantic:#b0395a;
+    --pragmatic:#5b57a6;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    font-size:17px;
+    line-height:1.6;
+  }
+  h1,h2{ font-family:'Fraunces', serif; font-weight:600; margin:0 0 .4em; letter-spacing:-0.01em; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  .wrap{ max-width:700px; margin:0 auto; padding:2.6rem 1.6rem 4.5rem; }
+
+  header.top{
+    border-bottom:1px solid var(--rule);
+    padding-bottom:1.4rem;
+    margin-bottom:1.6rem;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.75rem;
+    color:var(--ink-soft);
+    letter-spacing:.05em;
+    margin-bottom:.6rem;
+  }
+  header.top h1{ font-size:clamp(1.6rem,4vw,2.1rem); }
+  .sub{ color:var(--ink-soft); font-size:.96rem; margin-top:.5rem; max-width:56ch; }
+
+  /* Scoreboard */
+  .scoreboard{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:.8rem;
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:.85rem 1.1rem;
+    margin-top:1.3rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+  }
+  .score-num{ font-family:'Fraunces', serif; font-size:1.15rem; font-weight:600; }
+  .progress-track{
+    height:5px;
+    background:var(--rule);
+    border-radius:3px;
+    overflow:hidden;
+    width:100%;
+    margin-top:.6rem;
+  }
+  .progress-fill{ height:100%; background:var(--accent); width:0%; }
+
+  .toolbar{ display:flex; gap:.6rem; margin-top:.9rem; flex-wrap:wrap; }
+  button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.8rem;
+    padding:.55rem .95rem;
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .btn-ghost{ background:var(--paper-raised); border:1px solid var(--rule); color:var(--ink); }
+  .btn-ghost:hover{ border-color:var(--ink); }
+  .btn-primary{ background:var(--ink); border:1px solid var(--ink); color:var(--paper); }
+  .btn-primary:hover{ background:var(--accent); border-color:var(--accent); }
+  .btn-primary:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* Card */
+  .card-shell{ margin-top:1.8rem; }
+  .card{
+    border:1px solid var(--rule);
+    background:var(--paper-raised);
+    border-radius:3px;
+    padding:1.6rem 1.6rem 1.4rem;
+  }
+  .card-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.74rem;
+    color:var(--ink-soft);
+    margin-bottom:.9rem;
+  }
+  .sentence{
+    font-family:'Fraunces', serif;
+    font-size:1.28rem;
+    font-weight:500;
+    line-height:1.4;
+    margin-bottom:1.5rem;
+  }
+  .instr{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    letter-spacing:.04em;
+    margin-bottom:.7rem;
+  }
+  .opts{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:.5rem;
+  }
+  @media (max-width:520px){ .opts{ grid-template-columns:1fr; } }
+  .opt-btn{
+    text-align:left;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    padding:.65rem .8rem;
+    font-family:'Source Serif 4', serif;
+    font-size:.92rem;
+    color:var(--ink);
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .opt-btn:hover{ border-color:var(--ink); }
+  .opt-btn .tag{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.68rem;
+    color:var(--ink-soft);
+    margin-bottom:.15rem;
+  }
+  .opt-btn.selected{ border-color:var(--ink); border-width:2px; }
+  .opt-btn.correct{ border-color:var(--right); background:#e4ecdf; }
+  .opt-btn.incorrect{ border-color:var(--wrong); background:#f3e2e6; }
+  .opt-btn:disabled{ cursor:default; }
+
+  .verdict{
+    display:none;
+    margin-top:1.2rem;
+    padding-top:1rem;
+    border-top:1px dashed var(--rule);
+    font-size:.94rem;
+  }
+  .verdict.show{ display:block; }
+  .verdict-head{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+    margin-bottom:.4rem;
+  }
+  .verdict-head.correct{ color:var(--right); }
+  .verdict-head.incorrect{ color:var(--wrong); }
+  .note{ color:var(--ink-soft); }
+
+  .card-actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:1.3rem;
+  }
+
+  /* Summary screen */
+  .summary{ display:none; }
+  .summary.show{ display:block; }
+  .summary-score{
+    font-family:'Fraunces', serif;
+    font-size:2.4rem;
+    font-weight:600;
+    margin:1rem 0 .3rem;
+  }
+  .breakdown{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:.6rem;
+    margin-top:1.4rem;
+  }
+  @media (max-width:520px){ .breakdown{ grid-template-columns:1fr; } }
+  .bd-item{
+    border:1px solid var(--rule);
+    background:var(--paper-raised);
+    border-radius:2px;
+    padding:.7rem .9rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+    display:flex;
+    justify-content:space-between;
+  }
+
+  .legend{
+    margin-top:2rem;
+    font-size:.86rem;
+    color:var(--ink-soft);
+  }
+  .legend .row{ display:flex; gap:.5rem; margin-bottom:.3rem; }
+  .swatch{ width:.8rem; height:.8rem; border-radius:2px; margin-top:.2rem; flex:none; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">FLASHCARDS — DECODING LANGUAGE</div>
+    <h1>Ambiguity Identification Drill</h1>
+    <p class="sub">Read each sentence and choose the ambiguity type and category it demonstrates in a single click. 100 sentences, freshly shuffled every time you load or restart this page.</p>
+
+    <div class="scoreboard">
+      <div>
+        <span class="score-num" id="scoreNum">0 / 0</span> correct
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div id="cardCounter">Card 1 / 100</div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn-ghost" id="restartBtn" type="button">Restart with new shuffle</button>
+    </div>
+  </header>
+
+  <div class="card-shell">
+    <div class="card" id="card">
+      <div class="card-num" id="cardNum">Item 1 of 100</div>
+      <div class="sentence" id="sentenceText">Loading…</div>
+      <div class="instr">WHICH TYPE + CATEGORY OF AMBIGUITY IS THIS?</div>
+      <div class="opts" id="optsContainer"></div>
+      <div class="verdict" id="verdict">
+        <div class="verdict-head" id="verdictHead"></div>
+        <div class="note" id="verdictNote"></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-primary" id="nextBtn" type="button" disabled>Next Card</button>
+      </div>
+    </div>
+
+    <div class="card summary" id="summary">
+      <div class="eyebrow">RESULTS</div>
+      <h2>Drill complete</h2>
+      <div class="summary-score" id="summaryScore">0 / 100</div>
+      <div class="note" id="summaryPct">0%</div>
+      <div class="breakdown" id="breakdown"></div>
+      <div class="toolbar" style="margin-top:1.6rem;">
+        <button class="btn-primary" id="restartBtn2" type="button">Start a new shuffled drill</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="row"><span class="swatch" style="background:var(--lexical);"></span><span><strong>Lexical</strong> — Homonym (unrelated meanings, same word) · Polysemy (related meanings, same word)</span></div>
+    <div class="row"><span class="swatch" style="background:var(--syntactic);"></span><span><strong>Syntactic</strong> — Attachment (unclear modifier) · Coordination (unclear "and"/"or" grouping)</span></div>
+    <div class="row"><span class="swatch" style="background:var(--semantic);"></span><span><strong>Semantic</strong> — Quantifier Scope (unclear "all"/"some" reach) · Anaphoric (unclear pronoun antecedent)</span></div>
+    <div class="row"><span class="swatch" style="background:var(--pragmatic);"></span><span><strong>Pragmatic</strong> — Deictic (unclear "here"/"there"/"this" reference) · Irony (meaning opposite of the literal words)</span></div>
+  </div>
+
+</div>
+
+<script>
+/* =======================================================
+   QUESTION BANK — 100 ambiguous sentences
+   ======================================================= */
+const BANK = [
+  // ---------- LEXICAL: HOMONYM (13) ----------
+  { s:"The regulators spent the entire session arguing about how the bank should respond to the shortfall before markets reopened.", type:"Lexical", cat:"Homonym", note:"\u201cBank\u201d can mean a financial institution or the sloped edge of a river — two unrelated meanings of the same word." },
+  { s:"Nobody at the kennel show could explain the sudden bark that echoed through the exhibition hall just after midnight.", type:"Lexical", cat:"Homonym", note:"\u201cBark\u201d can mean the sound a dog makes or the outer covering of a tree." },
+  { s:"The coach still couldn't decide which bat should be used to open the tournament's opening match.", type:"Lexical", cat:"Homonym", note:"\u201cBat\u201d can mean the flying mammal or a piece of sporting equipment." },
+  { s:"The captain ordered the crew to lower the bow before the storm made the deck impossible to cross safely.", type:"Lexical", cat:"Homonym", note:"\u201cBow\u201d can mean the front of a ship or a weapon used to shoot arrows." },
+  { s:"She refused to reveal the date until the entire committee had reviewed the proposal in full detail.", type:"Lexical", cat:"Homonym", note:"\u201cDate\u201d can mean a calendar day, a type of fruit, or a romantic outing." },
+  { s:"The organizers insisted that the fair had never once been canceled in over a century of operation.", type:"Lexical", cat:"Homonym", note:"\u201cFair\u201d can mean a carnival-style event or something that is just and impartial." },
+  { s:"The judge said the fine would depend entirely on how the jury chose to interpret the conflicting evidence.", type:"Lexical", cat:"Homonym", note:"\u201cFine\u201d can mean a monetary penalty or something of high quality." },
+  { s:"Nobody at the ceremony noticed the ring had gone missing until the vows had already been exchanged.", type:"Lexical", cat:"Homonym", note:"\u201cRing\u201d can mean a piece of jewelry or a sound, like a bell ringing." },
+  { s:"The hikers were relieved to finally reach the spring after three grueling days without fresh water.", type:"Lexical", cat:"Homonym", note:"\u201cSpring\u201d can mean a source of water, a season, or a coiled metal device." },
+  { s:"The mechanic warned that the tire wouldn't survive another trip through the unpaved mountain roads.", type:"Lexical", cat:"Homonym", note:"\u201cTire\u201d can mean a wheel's rubber covering or to become exhausted." },
+  { s:"The farmhands spotted an unfamiliar mole near the base of the old stone wall just before dusk.", type:"Lexical", cat:"Homonym", note:"\u201cMole\u201d can mean the burrowing animal, a spy, or a skin blemish." },
+  { s:"The lifeguard couldn't quite tell whether the wave was meant as a warning or simply a greeting.", type:"Lexical", cat:"Homonym", note:"\u201cWave\u201d can mean a moving ridge of water or the hand gesture." },
+  { s:"The librarian insisted the light in the reading room needed to be replaced before winter set in.", type:"Lexical", cat:"Homonym", note:"\u201cLight\u201d can mean illumination or the opposite of heavy." },
+
+  // ---------- LEXICAL: POLYSEMY (13) ----------
+  { s:"The new manager wanted to run the department the same disciplined way her mentor once ran marathons.", type:"Lexical", cat:"Polysemy", note:"\u201cRun\u201d extends from physically running to managing an organization — related senses of the same word." },
+  { s:"By the time the expedition finally reached the foot of the ridge, morale — and every foot in the group — had taken a beating.", type:"Lexical", cat:"Polysemy", note:"\u201cFoot\u201d extends from a body part to the base of a landform." },
+  { s:"The professor spent the whole lecture explaining how a river's mouth differs structurally from a bottle's.", type:"Lexical", cat:"Polysemy", note:"\u201cMouth\u201d extends from a body part to an opening of a river or container." },
+  { s:"The board decided to promote the branch manager just as the old branch outside her office finally snapped in the wind.", type:"Lexical", cat:"Polysemy", note:"\u201cBranch\u201d extends from a tree limb to a division of a company." },
+  { s:"The architect insisted the table in the conference room should mirror the table of contents laid out in the proposal.", type:"Lexical", cat:"Polysemy", note:"\u201cTable\u201d extends from a piece of furniture to an organized list of data." },
+  { s:"The locksmith explained that the key to the safe wasn't at all the same kind of key that unlocked the melody in the score.", type:"Lexical", cat:"Polysemy", note:"\u201cKey\u201d extends from a device that opens locks to a musical scale." },
+  { s:"The general praised the young pilot for steadying the aircraft's wing long before she ever led the party's reform wing.", type:"Lexical", cat:"Polysemy", note:"\u201cWing\u201d extends from a part of an aircraft to a faction of an organization." },
+  { s:"The editor rejected the submission because the paper it was printed on had already begun to yellow with age.", type:"Lexical", cat:"Polysemy", note:"\u201cPaper\u201d extends from a written work to the physical material it's printed on." },
+  { s:"The dentist noted that the crown looked remarkably similar to the one displayed in the palace's exhibit on royal crowns.", type:"Lexical", cat:"Polysemy", note:"\u201cCrown\u201d extends from a dental cap to a royal headpiece." },
+  { s:"The sommelier explained that the wine's body developed slowly, much the way a dancer's body develops technique over years.", type:"Lexical", cat:"Polysemy", note:"\u201cBody\u201d extends from a wine's texture and richness to a physical form." },
+  { s:"The negotiator warned that the company's head office and the union's head negotiator disagreed on almost every clause.", type:"Lexical", cat:"Polysemy", note:"\u201cHead\u201d extends from \u201cmain/central\u201d to \u201cleading person.\u201d" },
+  { s:"The seamstress noticed the neck of the bottle matched the shape of the collar she was stitching around the model's neck.", type:"Lexical", cat:"Polysemy", note:"\u201cNeck\u201d extends from a body part to the narrow top of a container." },
+  { s:"The IT specialist explained that the network's backbone had failed the same week the hiking guide injured his own backbone.", type:"Lexical", cat:"Polysemy", note:"\u201cBackbone\u201d extends from a spine to the core infrastructure of a system." },
+
+  // ---------- SYNTACTIC: ATTACHMENT (13) ----------
+  { s:"The detective observed the suspect with the binoculars from across the street for nearly an hour.", type:"Syntactic", cat:"Attachment", note:"Did the detective use binoculars, or does the suspect own binoculars? The phrase \u201cwith the binoculars\u201d could attach to either." },
+  { s:"The witness identified the man with the scar near the courthouse steps just before the trial resumed.", type:"Syntactic", cat:"Attachment", note:"\u201cWith the scar\u201d could describe the man, or describe how the identification happened near the steps." },
+  { s:"The tour guide showed the tourists the ruins with the broken columns just before the sun went down.", type:"Syntactic", cat:"Attachment", note:"\u201cWith the broken columns\u201d could modify \u201cruins\u201d or describe the manner of showing." },
+  { s:"The police arrested the man on the balcony with the stolen jewelry after a two-hour standoff.", type:"Syntactic", cat:"Attachment", note:"The jewelry could belong to the man, be located on the balcony, or describe how the arrest happened." },
+  { s:"Investigators photographed the vehicle near the warehouse with the broken taillight before it was towed away.", type:"Syntactic", cat:"Attachment", note:"\u201cWith the broken taillight\u201d could describe the vehicle or the warehouse." },
+  { s:"The zookeeper fed the tiger behind the enclosure with the raw meat while visitors watched from a safe distance.", type:"Syntactic", cat:"Attachment", note:"\u201cWith the raw meat\u201d could describe the feeding method or modify the enclosure." },
+  { s:"The engineer inspected the bridge over the river with the faulty support beam before authorizing any traffic.", type:"Syntactic", cat:"Attachment", note:"The faulty beam could belong to the bridge or, oddly, to the river." },
+  { s:"The buyer inspected the house with the leaking roof for nearly two hours before signing the contract.", type:"Syntactic", cat:"Attachment", note:"\u201cWith the leaking roof\u201d most likely modifies the house, but the sentence structure allows it to attach to the inspecting itself." },
+  { s:"The senator addressed the protesters outside the capitol with a raised fist as the cameras rolled.", type:"Syntactic", cat:"Attachment", note:"The raised fist could belong to the senator or to the protesters." },
+  { s:"The nurse treated the patient in the emergency room with the broken arm before the surgeon arrived.", type:"Syntactic", cat:"Attachment", note:"\u201cWith the broken arm\u201d could describe the patient or, less naturally, the room." },
+  { s:"The photographer captured the dancer on the stage with the dramatic lighting during the final rehearsal.", type:"Syntactic", cat:"Attachment", note:"The dramatic lighting could modify the stage or describe how the photograph was captured." },
+  { s:"The chef prepared the salmon for the diplomats with the citrus glaze requested by the head of protocol.", type:"Syntactic", cat:"Attachment", note:"The citrus glaze could belong to the salmon or describe the method of preparation." },
+  { s:"The guard watched the visitor at the gate with the surveillance camera mounted just above the entrance.", type:"Syntactic", cat:"Attachment", note:"The camera could be how the guard watched, or an object the visitor was carrying at the gate." },
+
+  // ---------- SYNTACTIC: COORDINATION (12) ----------
+  { s:"The scholarship covers tuition and books and supplies for every first-year student admitted this fall.", type:"Syntactic", cat:"Coordination", note:"Unclear grouping: does it cover \u201ctuition\u201d plus \u201cbooks and supplies,\u201d or \u201ctuition and books\u201d plus \u201csupplies\u201d?" },
+  { s:"The museum offers free admission to retired teachers and students with valid identification.", type:"Syntactic", cat:"Coordination", note:"Does \u201cwith valid identification\u201d apply only to students, or to both retired teachers and students?" },
+  { s:"The bakery sells day-old bread and pastries and cakes at half price every Sunday afternoon.", type:"Syntactic", cat:"Coordination", note:"Unclear whether \u201cday-old\u201d applies to all three items or only to the bread." },
+  { s:"Injured soldiers and civilians were airlifted to the nearest field hospital before nightfall.", type:"Syntactic", cat:"Coordination", note:"Were only the soldiers injured, or were both the soldiers and civilians injured?" },
+  { s:"The committee approved additional funding for veterans and disabled employees of the company this quarter.", type:"Syntactic", cat:"Coordination", note:"Unclear whether \u201cdisabled\u201d applies only to employees, or to both veterans and employees." },
+  { s:"The scholarship program is open to low-income students and veterans who served overseas for at least a year.", type:"Syntactic", cat:"Coordination", note:"Does \u201cwho served overseas\u201d apply only to veterans, or to both students and veterans?" },
+  { s:"The professor publicly thanked her colleagues and graduate students who assisted with the field research.", type:"Syntactic", cat:"Coordination", note:"Unclear whether \u201cwho assisted\u201d applies only to graduate students, or to both colleagues and students." },
+  { s:"The airline advertises free meals and drinks for first-class passengers on every long-haul flight.", type:"Syntactic", cat:"Coordination", note:"Unclear whether both meals and drinks are free only for first class, or meals are free for everyone while drinks are reserved for first class." },
+  { s:"The gallery displayed paintings by local artists and sculptures from the regional collection this spring.", type:"Syntactic", cat:"Coordination", note:"Unclear whether \u201cby local artists\u201d applies only to the paintings, or to both the paintings and sculptures." },
+  { s:"The clinic treats children and adults with chronic illnesses at a significantly reduced cost.", type:"Syntactic", cat:"Coordination", note:"Unclear whether \u201cwith chronic illnesses\u201d applies only to adults, or to both children and adults." },
+  { s:"The report cited interviews with former employees and executives who requested anonymity before publication.", type:"Syntactic", cat:"Coordination", note:"Unclear whether \u201cwho requested anonymity\u201d applies only to executives, or to both groups." },
+  { s:"The charity provides emergency shelter for homeless veterans and families throughout the winter months.", type:"Syntactic", cat:"Coordination", note:"Unclear whether \u201chomeless\u201d applies only to veterans, or to both veterans and families." },
+
+  // ---------- SEMANTIC: QUANTIFIER SCOPE (12) ----------
+  { s:"Every reviewer on the panel rejected some of the manuscripts submitted for consideration that year.", type:"Semantic", cat:"Quantifier Scope", note:"Did every reviewer reject the same manuscripts, or did each reject a different subset?" },
+  { s:"Each professor on the faculty praised a student during the closing ceremony last spring.", type:"Semantic", cat:"Quantifier Scope", note:"Was it the same student praised by everyone, or a different student for each professor?" },
+  { s:"All the analysts privately doubted one of the projections included in the quarterly report.", type:"Semantic", cat:"Quantifier Scope", note:"Did all the analysts doubt the same projection, or a different one each?" },
+  { s:"Every delegate at the summit signed a treaty before the closing session officially ended.", type:"Semantic", cat:"Quantifier Scope", note:"Did every delegate sign the same treaty, or a different treaty each?" },
+  { s:"Most of the villagers openly distrust some of the newcomers who arrived early last spring.", type:"Semantic", cat:"Quantifier Scope", note:"Do the villagers all distrust the same newcomers, or different individuals each?" },
+  { s:"Every witness at the inquiry contradicted a detail found in the official incident report.", type:"Semantic", cat:"Quantifier Scope", note:"Did every witness contradict the same detail, or a different one each?" },
+  { s:"All the students in the class answered a question incorrectly during the final examination.", type:"Semantic", cat:"Quantifier Scope", note:"Was it the same question missed by everyone, or a different question for each student?" },
+  { s:"Every guard stationed at the checkpoint suspected one of the visitors during the routine inspection.", type:"Semantic", cat:"Quantifier Scope", note:"Did every guard suspect the same visitor, or a different one each?" },
+  { s:"Each juror privately doubted a piece of evidence presented earlier by the prosecution.", type:"Semantic", cat:"Quantifier Scope", note:"Did every juror doubt the same piece of evidence, or a different one each?" },
+  { s:"Every investor quietly withdrew some of the funds just before the market suddenly collapsed.", type:"Semantic", cat:"Quantifier Scope", note:"Did every investor withdraw from the same fund, or different funds of their own?" },
+  { s:"All the critics enthusiastically praised a performance from the production's long opening week.", type:"Semantic", cat:"Quantifier Scope", note:"Was it the same performance praised by every critic, or a different one each?" },
+  { s:"Every teacher on staff recommended a book to the incoming class of freshmen this fall.", type:"Semantic", cat:"Quantifier Scope", note:"Was it the same book recommended by all teachers, or a different book from each?" },
+
+  // ---------- SEMANTIC: ANAPHORIC (12) ----------
+  { s:"The trophy didn't fit inside the suitcase, and it desperately needed to be replaced before the flight.", type:"Semantic", cat:"Anaphoric", note:"\u201cIt\u201d could refer back to either the trophy or the suitcase." },
+  { s:"The senator kept arguing with the journalist until he finally issued a grudging apology on air.", type:"Semantic", cat:"Anaphoric", note:"\u201cHe\u201d could refer to either the senator or the journalist." },
+  { s:"The teacher scolded the student harshly after he arrived nearly an hour late to the meeting.", type:"Semantic", cat:"Anaphoric", note:"\u201cHe\u201d could refer to either the teacher or the student." },
+  { s:"The manager emailed the client twice before he finally left for a two-week vacation abroad.", type:"Semantic", cat:"Anaphoric", note:"\u201cHe\u201d could refer to either the manager or the client." },
+  { s:"The doctor carefully examined the patient after she reviewed the unsettling results of the test.", type:"Semantic", cat:"Anaphoric", note:"\u201cShe\u201d could refer to either the doctor or the patient." },
+  { s:"The coach argued fiercely with the referee until he finally threatened to end the match early.", type:"Semantic", cat:"Anaphoric", note:"\u201cHe\u201d could refer to either the coach or the referee." },
+  { s:"The lawyer met privately with the witness before she testified in front of the grand jury.", type:"Semantic", cat:"Anaphoric", note:"\u201cShe\u201d could refer to either the lawyer or the witness." },
+  { s:"The director praised the actor warmly after he improvised the entire closing scene on set.", type:"Semantic", cat:"Anaphoric", note:"\u201cHe\u201d could refer to either the director or the actor." },
+  { s:"The mother quietly told her daughter that she would regret the decision for years to come.", type:"Semantic", cat:"Anaphoric", note:"\u201cShe\u201d could refer to either the mother or the daughter." },
+  { s:"The captain informed the sailor that he would be reassigned to a different ship entirely.", type:"Semantic", cat:"Anaphoric", note:"\u201cHe\u201d could refer to either the captain or the sailor." },
+  { s:"The professor abruptly emailed the student because she had completely missed the submission deadline.", type:"Semantic", cat:"Anaphoric", note:"\u201cShe\u201d could refer to either the professor or the student." },
+  { s:"The negotiator warned the diplomat that he had badly misunderstood a key clause in the treaty.", type:"Semantic", cat:"Anaphoric", note:"\u201cHe\u201d could refer to either the negotiator or the diplomat." },
+
+  // ---------- PRAGMATIC: DEICTIC (12) ----------
+  { s:"Meet me here tomorrow evening, and don't forget to bring that with you, since we won't get another chance.", type:"Pragmatic", cat:"Deictic", note:"\u201cHere,\u201d \u201ctomorrow,\u201d and \u201cthat\u201d all require situational context to know exactly what and when they mean." },
+  { s:"Leave this over there before the others arrive, because I won't be able to move it myself.", type:"Pragmatic", cat:"Deictic", note:"\u201cThis\u201d and \u201cthere\u201d have no fixed referent without shared physical context." },
+  { s:"She insisted she'd be back by then, although nobody in the room seemed to know exactly when that was.", type:"Pragmatic", cat:"Deictic", note:"\u201cThen\u201d and \u201cthat\u201d depend entirely on a shared understanding not present in the text itself." },
+  { s:"Put it there before he gets back, or we'll have to deal with this ourselves later tonight.", type:"Pragmatic", cat:"Deictic", note:"\u201cThere\u201d and \u201cthis\u201d can't be resolved without knowing the physical setting." },
+  { s:"They instructed us to wait here quietly until she returned with it, however long that took.", type:"Pragmatic", cat:"Deictic", note:"\u201cHere\u201d and \u201cit\u201d require context outside the sentence to be understood." },
+  { s:"He kept insisting this was the very last time, though what he meant by that was never entirely clear.", type:"Pragmatic", cat:"Deictic", note:"\u201cThis\u201d and \u201cthat\u201d point to something only clear to the original speaker and listener." },
+  { s:"We agreed to discuss that once this was finally settled, right here in this very room.", type:"Pragmatic", cat:"Deictic", note:"Multiple deictic terms — \u201cthat,\u201d \u201cthis,\u201d and \u201chere\u201d — all depend on shared situational context." },
+  { s:"I need you to bring it there discreetly before they notice it's missing from the shelf.", type:"Pragmatic", cat:"Deictic", note:"\u201cIt\u201d and \u201cthere\u201d only make sense to someone already present in the conversation." },
+  { s:"You'll find it over there, tucked just behind that one near the window.", type:"Pragmatic", cat:"Deictic", note:"\u201cThere\u201d and \u201cthat one\u201d require the listener to already be looking at the scene." },
+  { s:"She promised she'd call then, but nobody could agree on whether that meant later today or sometime next week.", type:"Pragmatic", cat:"Deictic", note:"\u201cThen\u201d and \u201cthat\u201d are time expressions with no fixed meaning outside their original context." },
+  { s:"Leave that with him quietly, and let her know I'll be there as soon as I can.", type:"Pragmatic", cat:"Deictic", note:"\u201cThat\u201d and \u201cthere\u201d depend on a shared physical and situational context." },
+  { s:"He mentioned he'd meet them here again once this whole ordeal was finally over.", type:"Pragmatic", cat:"Deictic", note:"\u201cHere\u201d and \u201cthis\u201d require external context to resolve their meaning." },
+
+  // ---------- PRAGMATIC: IRONY (13) ----------
+  { s:"Oh, fantastic — the server crashed again right before the client demo was supposed to start.", type:"Pragmatic", cat:"Irony", note:"\u201cFantastic\u201d is used to mean the opposite — the situation is actually frustrating." },
+  { s:"Well, isn't that just perfect timing, losing power in the middle of the storm warning.", type:"Pragmatic", cat:"Irony", note:"\u201cPerfect\u201d ironically signals that the timing is, in fact, terrible." },
+  { s:"Sure, because showing up three hours late is exactly what a punctual person would do.", type:"Pragmatic", cat:"Irony", note:"The literal statement praises punctuality while actually mocking the lateness." },
+  { s:"What a brilliant idea, scheduling the fire drill during the middle of a thunderstorm.", type:"Pragmatic", cat:"Irony", note:"\u201cBrilliant\u201d is used sarcastically to criticize a poor decision." },
+  { s:"Great, another meeting this afternoon that honestly could have just been an email.", type:"Pragmatic", cat:"Irony", note:"\u201cGreat\u201d expresses annoyance rather than genuine enthusiasm." },
+  { s:"Lovely — the one day I forget my umbrella is, of course, the day it finally pours.", type:"Pragmatic", cat:"Irony", note:"\u201cLovely\u201d is used to express frustration, not delight." },
+  { s:"Wonderful, the printer jammed again right before the deadline, exactly like it always does.", type:"Pragmatic", cat:"Irony", note:"\u201cWonderful\u201d ironically expresses exasperation, not admiration." },
+  { s:"How thoughtful of him to cancel the reservation just an hour before dinner was supposed to start.", type:"Pragmatic", cat:"Irony", note:"\u201cThoughtful\u201d is used sarcastically to criticize inconsiderate behavior." },
+  { s:"Just what we needed, a flat tire in the middle of nowhere with no signal at all.", type:"Pragmatic", cat:"Irony", note:"\u201cJust what we needed\u201d ironically signals that this is the last thing anyone wanted." },
+  { s:"Nice job spilling coffee all over the only printed copy of the final report.", type:"Pragmatic", cat:"Irony", note:"\u201cNice job\u201d ironically criticizes a costly mistake rather than praising it." },
+  { s:"Terrific, the internet went out right in the middle of the live broadcast.", type:"Pragmatic", cat:"Irony", note:"\u201cTerrific\u201d expresses frustration at very poor timing." },
+  { s:"Really impressive, forgetting your keys for the third time this week alone.", type:"Pragmatic", cat:"Irony", note:"\u201cImpressive\u201d is used sarcastically to highlight repeated forgetfulness." },
+  { s:"Perfect — the elevator breaks down right when we're already running late for the interview.", type:"Pragmatic", cat:"Irony", note:"\u201cPerfect\u201d ironically underscores how badly timed the breakdown is." }
+];
+
+const ANSWER_LABELS = [
+  { type:"Lexical", cat:"Homonym" },
+  { type:"Lexical", cat:"Polysemy" },
+  { type:"Syntactic", cat:"Attachment" },
+  { type:"Syntactic", cat:"Coordination" },
+  { type:"Semantic", cat:"Quantifier Scope" },
+  { type:"Semantic", cat:"Anaphoric" },
+  { type:"Pragmatic", cat:"Deictic" },
+  { type:"Pragmatic", cat:"Irony" }
+];
+
+/* =======================================================
+   STATE + HELPERS
+   ======================================================= */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let deck = [];
+let idx = 0;
+let score = 0;
+let answeredThisCard = false;
+let results = []; // { correct: bool, item }
+
+/* =======================================================
+   RENDER
+   ======================================================= */
+function startDrill(){
+  deck = shuffle(BANK);
+  idx = 0;
+  score = 0;
+  results = [];
+  document.getElementById('summary').classList.remove('show');
+  document.getElementById('card').style.display = 'block';
+  renderCard();
+  updateScoreboard();
+}
+
+function updateScoreboard(){
+  document.getElementById('scoreNum').textContent = score + ' / ' + results.length;
+  document.getElementById('cardCounter').textContent = 'Card ' + Math.min(idx + 1, deck.length) + ' / ' + deck.length;
+  const pct = deck.length ? Math.round((idx / deck.length) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function renderCard(){
+  answeredThisCard = false;
+  const item = deck[idx];
+  document.getElementById('cardNum').textContent = 'Item ' + (idx + 1) + ' of ' + deck.length;
+  document.getElementById('sentenceText').textContent = item.s;
+
+  const optsContainer = document.getElementById('optsContainer');
+  optsContainer.innerHTML = '';
+  const shuffledLabels = shuffle(ANSWER_LABELS);
+  shuffledLabels.forEach(label => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'opt-btn';
+    btn.innerHTML = '<span class="tag">' + label.type + '</span>' + label.cat;
+    btn.dataset.type = label.type;
+    btn.dataset.cat = label.cat;
+    btn.addEventListener('click', () => selectAnswer(btn, item));
+    optsContainer.appendChild(btn);
+  });
+
+  document.getElementById('verdict').classList.remove('show');
+  document.getElementById('nextBtn').disabled = true;
+  document.getElementById('nextBtn').textContent = (idx === deck.length - 1) ? 'See Results' : 'Next Card';
+  updateScoreboard();
+}
+
+function selectAnswer(btn, item){
+  if (answeredThisCard) return;
+  answeredThisCard = true;
+
+  const allBtns = document.querySelectorAll('.opt-btn');
+  const isCorrect = btn.dataset.type === item.type && btn.dataset.cat === item.cat;
+
+  allBtns.forEach(b => {
+    b.disabled = true;
+    if (b.dataset.type === item.type && b.dataset.cat === item.cat) {
+      b.classList.add('correct');
+    } else if (b === btn && !isCorrect) {
+      b.classList.add('incorrect');
+    }
+    if (b === btn) b.classList.add('selected');
+  });
+
+  const verdict = document.getElementById('verdict');
+  const head = document.getElementById('verdictHead');
+  head.textContent = isCorrect ? '\u2713 Correct — ' + item.type + ' / ' + item.cat : '\u2717 Incorrect — the answer is ' + item.type + ' / ' + item.cat;
+  head.className = 'verdict-head ' + (isCorrect ? 'correct' : 'incorrect');
+  document.getElementById('verdictNote').textContent = item.note;
+  verdict.classList.add('show');
+
+  if (isCorrect) score++;
+  results.push({ correct: isCorrect, type: item.type, cat: item.cat });
+
+  document.getElementById('nextBtn').disabled = false;
+  updateScoreboard();
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (idx < deck.length - 1) {
+    idx++;
+    renderCard();
+  } else {
+    showSummary();
+  }
+});
+
+function showSummary(){
+  document.getElementById('card').style.display = 'none';
+  const summary = document.getElementById('summary');
+  summary.classList.add('show');
+
+  document.getElementById('summaryScore').textContent = score + ' / ' + deck.length;
+  document.getElementById('summaryPct').textContent = Math.round((score / deck.length) * 100) + '% correct';
+
+  // breakdown by type
+  const types = ["Lexical","Syntactic","Semantic","Pragmatic"];
+  const breakdown = document.getElementById('breakdown');
+  breakdown.innerHTML = '';
+  types.forEach(t => {
+    const attempted = results.filter(r => r.type === t);
+    const correct = attempted.filter(r => r.correct).length;
+    const div = document.createElement('div');
+    div.className = 'bd-item';
+    div.innerHTML = '<span>' + t + '</span><span>' + correct + ' / ' + attempted.length + '</span>';
+    breakdown.appendChild(div);
+  });
+
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('cardCounter').textContent = 'Drill complete';
+}
+
+document.getElementById('restartBtn').addEventListener('click', startDrill);
+document.getElementById('restartBtn2').addEventListener('click', startDrill);
+
+startDrill();
+</script>
+
+</body>
+</html>

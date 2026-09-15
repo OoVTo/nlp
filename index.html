@@ -525,9 +525,87 @@
     html{ scroll-behavior:auto; }
     *{ transition:none !important; }
   }
+
+  /* ---------- Password gate ---------- */
+  #gate{
+    position:fixed;
+    inset:0;
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:1.5rem;
+  }
+  #gate.hidden{ display:none; }
+  .gate-card{
+    max-width:360px;
+    width:100%;
+    text-align:center;
+  }
+  .gate-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem;
+    color:var(--ink-soft);
+    letter-spacing:.05em;
+    margin-bottom:.9rem;
+  }
+  .gate-card h1{
+    font-size:1.7rem;
+    margin-bottom:1.4rem;
+  }
+  .gate-form{
+    display:flex;
+    flex-direction:column;
+    gap:.8rem;
+  }
+  .gate-input{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.95rem;
+    padding:.7rem .9rem;
+    border:1px solid var(--rule);
+    background:var(--paper-raised);
+    color:var(--ink);
+    border-radius:2px;
+    text-align:center;
+    letter-spacing:.05em;
+  }
+  .gate-input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .gate-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.85rem;
+    padding:.7rem .9rem;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .gate-btn:hover{ background:var(--accent); border-color:var(--accent); }
+  .gate-error{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    color:var(--semantic);
+    min-height:1.2em;
+    margin-top:.4rem;
+  }
+  .shell{ display:none; }
+  .shell.revealed{ display:grid; }
 </style>
 </head>
 <body>
+
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-eyebrow">RESTRICTED — FIELD NOTES</div>
+    <h1>Enter password</h1>
+    <form class="gate-form" id="gateForm" autocomplete="off">
+      <input type="password" class="gate-input" id="gateInput" placeholder="password" autofocus>
+      <button type="submit" class="gate-btn">Unlock</button>
+      <div class="gate-error" id="gateError"></div>
+    </form>
+  </div>
+</div>
 
 <div class="shell">
   <!-- ============ SIDEBAR ============ -->
@@ -1011,6 +1089,34 @@
 </div>
 
 <script>
+  // ---------- Password gate ----------
+  (function(){
+    const PASSWORD = "labyupo";
+    const gate = document.getElementById('gate');
+    const shell = document.querySelector('.shell');
+    const form = document.getElementById('gateForm');
+    const input = document.getElementById('gateInput');
+    const error = document.getElementById('gateError');
+
+    if (sessionStorage.getItem('nlpNotesUnlocked') === 'true') {
+      gate.classList.add('hidden');
+      shell.classList.add('revealed');
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (input.value === PASSWORD) {
+        sessionStorage.setItem('nlpNotesUnlocked', 'true');
+        gate.classList.add('hidden');
+        shell.classList.add('revealed');
+      } else {
+        error.textContent = 'Incorrect password — try again.';
+        input.value = '';
+        input.focus();
+      }
+    });
+  })();
+
   // ---------- Scroll-spy navigation ----------
   const sections = document.querySelectorAll('section.part');
   const links = document.querySelectorAll('.toc a');

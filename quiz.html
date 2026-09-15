@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLP Exam — Decoding Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ece8df;
+    --paper-raised:#f4f1e9;
+    --ink:#20241f;
+    --ink-soft:#54554c;
+    --rule:#c9c3b3;
+    --accent:#2f7f74;
+    --wrong:#b0395a;
+    --right:#3f7d3a;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    font-size:17px;
+    line-height:1.6;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:600; line-height:1.15; margin:0 0 .5em; letter-spacing:-0.01em; }
+
+  .wrap{ max-width:760px; margin:0 auto; padding:3rem 1.6rem 5rem; }
+
+  header.top{
+    border-bottom:1px solid var(--rule);
+    padding-bottom:1.8rem;
+    margin-bottom:2rem;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem;
+    color:var(--ink-soft);
+    letter-spacing:.05em;
+    margin-bottom:.7rem;
+  }
+  header.top h1{ font-size:clamp(1.8rem,4vw,2.4rem); }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem 1.2rem;
+    margin-top:1.1rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+    color:var(--ink-soft);
+  }
+  .instructions{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:1rem 1.3rem;
+    margin-top:1.3rem;
+    font-size:.94rem;
+    color:var(--ink-soft);
+  }
+  .instructions strong{ color:var(--ink); }
+
+  .toolbar{
+    display:flex;
+    gap:.7rem;
+    flex-wrap:wrap;
+    margin-top:1.3rem;
+  }
+  button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+    padding:.6rem 1rem;
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .btn-ghost{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    color:var(--ink);
+  }
+  .btn-ghost:hover{ border-color:var(--ink); }
+  .btn-primary{
+    background:var(--ink);
+    border:1px solid var(--ink);
+    color:var(--paper);
+  }
+  .btn-primary:hover{ background:var(--accent); border-color:var(--accent); }
+  .btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
+
+  section.block{ margin-top:2.6rem; }
+  .block-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:.6rem;
+    margin-bottom:1.4rem;
+  }
+  .block-head h2{ font-size:1.35rem; }
+  .block-head .count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    color:var(--ink-soft);
+  }
+
+  .q{
+    border:1px solid var(--rule);
+    background:var(--paper-raised);
+    border-radius:2px;
+    padding:1.1rem 1.3rem;
+    margin-bottom:1rem;
+  }
+  .q-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem;
+    color:var(--ink-soft);
+    margin-bottom:.4rem;
+  }
+  .q-prompt{ font-size:1rem; margin-bottom:.85rem; }
+
+  .id-input{
+    width:100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.92rem;
+    padding:.6rem .75rem;
+    border:1px solid var(--rule);
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+  }
+  .id-input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  .options{ display:flex; flex-direction:column; gap:.5rem; }
+  .opt{
+    display:flex;
+    align-items:flex-start;
+    gap:.6rem;
+    padding:.55rem .7rem;
+    border:1px solid var(--rule);
+    border-radius:2px;
+    background:var(--paper);
+    cursor:pointer;
+    font-size:.94rem;
+  }
+  .opt:hover{ border-color:var(--accent); }
+  .opt input{ margin-top:.25rem; accent-color:var(--accent); }
+  .opt.selected{ border-color:var(--accent); background:#e4ecdf; }
+
+  /* Grading states */
+  .q.correct{ border-left:4px solid var(--right); }
+  .q.incorrect{ border-left:4px solid var(--wrong); }
+  .verdict{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    margin-top:.7rem;
+    padding-top:.7rem;
+    border-top:1px dashed var(--rule);
+  }
+  .verdict.correct{ color:var(--right); }
+  .verdict.incorrect{ color:var(--wrong); }
+  .verdict .answer-line{ color:var(--ink-soft); margin-top:.2rem; }
+  .opt.correct-answer{ border-color:var(--right); background:#e4ecdf; }
+  .opt.wrong-picked{ border-color:var(--wrong); background:#f3e2e6; }
+
+  .id-input.correct{ border-color:var(--right); background:#e4ecdf; }
+  .id-input.incorrect{ border-color:var(--wrong); background:#f3e2e6; }
+
+  fieldset{ border:none; margin:0; padding:0; }
+
+  /* Results banner */
+  #resultsBanner{
+    display:none;
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:var(--ink);
+    color:var(--paper);
+    padding:1rem 1.6rem;
+    border-radius:0 0 4px 4px;
+    margin:0 auto 2rem;
+    max-width:760px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  #resultsBanner.show{ display:block; }
+  .score-big{ font-family:'Fraunces', serif; font-size:1.6rem; font-weight:600; margin-bottom:.2rem; }
+  .score-sub{ font-size:.8rem; color:#c9c3b3; }
+
+  footer.bottom{
+    margin-top:2.4rem;
+    padding-top:1.6rem;
+    border-top:1px solid var(--rule);
+    display:flex;
+    justify-content:center;
+  }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">ASSESSMENT — DECODING LANGUAGE</div>
+    <h1>Natural Language Processing: Exam</h1>
+    <div class="meta-row">
+      <span>Section A — Identification: 20 items</span>
+      <span>·</span>
+      <span>Section B — Application: 30 items</span>
+      <span>·</span>
+      <span>Total: 50 items</span>
+    </div>
+    <div class="instructions">
+      <strong>Instructions.</strong> Section A asks you to identify the term being described — spelling is checked, but not capitalization. Section B presents application-based multiple choice; choose the single best answer. Questions and choices are drawn at random from a larger bank and reshuffle on every reload, so no two attempts look alike. Click <strong>Submit Exam</strong> when finished to reveal your score and the correct answers.
+    </div>
+    <div class="toolbar">
+      <button class="btn-ghost" id="reshuffleBtn" type="button">Shuffle a new set</button>
+    </div>
+  </header>
+
+  <div id="resultsBanner">
+    <div class="score-big" id="scoreBig">—</div>
+    <div class="score-sub" id="scoreSub">—</div>
+  </div>
+
+  <form id="examForm">
+
+    <section class="block">
+      <div class="block-head">
+        <h2>Section A — Identification</h2>
+        <span class="count">20 items</span>
+      </div>
+      <div id="idContainer"></div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>Section B — Application</h2>
+        <span class="count">30 items</span>
+      </div>
+      <div id="mcqContainer"></div>
+    </section>
+
+    <footer class="bottom">
+      <button class="btn-primary" id="submitBtn" type="submit">Submit Exam</button>
+    </footer>
+
+  </form>
+
+</div>
+
+<script>
+/* =======================================================
+   QUESTION BANKS
+   ======================================================= */
+
+// 50-item Identification pool — 20 are drawn per load.
+const ID_POOL = [
+  { prompt: "Data organized in a predefined format, schema, or model — such as SQL databases, CSV files, or spreadsheets — making it easily searchable and manageable by algorithms.", answers: ["structured text","structured data"] },
+  { prompt: "Data without a predefined conceptual model or structure — such as emails, social media posts, articles, or videos — requiring processing techniques like NLP to analyze.", answers: ["unstructured text","unstructured data"] },
+  { prompt: "The branch of NLP focused on machine reading comprehension and interpreting human language intent, context, and semantics.", answers: ["nlu","natural language understanding"] },
+  { prompt: "The branch of NLP focused on producing text or speech responses from structured data or internal representations.", answers: ["nlg","natural language generation"] },
+  { prompt: "The broader field combining NLU and NLG to enable communication between machines and humans.", answers: ["nlp","natural language processing"] },
+  { prompt: "The process of breaking down a text into smaller units such as words, subwords, or characters.", answers: ["tokenization"] },
+  { prompt: "Individual units or pieces of language — such as words, punctuation, or symbols — obtained through tokenization.", answers: ["tokens","token"] },
+  { prompt: "The process of reducing words to their root form by chopping off affixes using crude heuristic rules (e.g., 'running' to 'run').", answers: ["stemming"] },
+  { prompt: "The process of determining a word's dictionary base form based on context and morphological analysis (e.g., 'better' to 'good').", answers: ["lemmatization"] },
+  { prompt: "The process of marking up a word in a text to correspond to a particular part of speech, based on its definition and context.", answers: ["pos tagging","part of speech tagging","part-of-speech tagging"] },
+  { prompt: "An information extraction task that identifies and classifies entities in text into categories such as person, organization, location, date, or quantity.", answers: ["ner","named entity recognition"] },
+  { prompt: "The process of converting text into a standard, consistent format — such as lowercasing, expanding contractions, or removing punctuation.", answers: ["text normalization","normalization"] },
+  { prompt: "The technique of filtering out common, high-frequency words that carry little domain-specific semantic value.", answers: ["stop word removal","stopword removal"] },
+  { prompt: "Language spoken by humans that evolved naturally through use, repetition, and social communication, distinct from programming languages or formal logic.", answers: ["natural language"] },
+  { prompt: "A bridge language systematically used to make communication possible between groups who do not share a native language, such as English globally.", answers: ["lingua franca"] },
+  { prompt: "The first stage of the human cognitive analog of language processing: identifying concepts and ideas.", answers: ["conceptualization"] },
+  { prompt: "The second stage of the human cognitive analog of language processing: combining and structuring linguistic structures around a concept.", answers: ["formulation"] },
+  { prompt: "The third stage of the human cognitive analog of language processing: expressing a formulated structure via speech, writing, or sign.", answers: ["articulation"] },
+  { prompt: "The linguistic principle proposing that the structure of a language influences or determines its speakers' worldview and cognitive processes.", answers: ["sapir-whorf hypothesis","sapir whorf hypothesis","sapir-whorf"] },
+  { prompt: "Languages that lack large monolingual or parallel text corpora, dictionary benchmarks, or expert annotations needed to build NLP models.", answers: ["low-resource languages","low resource languages"] },
+  { prompt: "A fundamental NLP challenge where words, phrases, or sentences yield multiple valid computational interpretations.", answers: ["ambiguity"] },
+  { prompt: "The type of ambiguity that occurs when an individual word possesses multiple distinct meanings.", answers: ["lexical ambiguity"] },
+  { prompt: "The type of ambiguity that occurs when a sentence can be parsed in multiple grammatical ways due to its structure.", answers: ["syntactic ambiguity"] },
+  { prompt: "The type of ambiguity that occurs when a sentence has multiple interpretations even after structural and lexical resolution.", answers: ["semantic ambiguity"] },
+  { prompt: "The type of ambiguity that occurs when context, tone, or situational cues determine meaning beyond the literal text.", answers: ["pragmatic ambiguity"] },
+  { prompt: "Words that sound alike or are spelled alike but have different meanings, such as 'bark' (dog sound vs. tree covering).", answers: ["homonyms","homonym"] },
+  { prompt: "A single word with multiple related meanings, such as 'head' (body part vs. leader).", answers: ["polysemy"] },
+  { prompt: "The syntactic ambiguity that arises when it's unclear which part of a sentence a modifier, like a prepositional phrase, is associated with.", answers: ["attachment ambiguity","attachment"] },
+  { prompt: "The syntactic ambiguity that occurs when it's unclear how a conjunction like 'and' or 'or' connects parts of a sentence.", answers: ["coordination ambiguity","coordination"] },
+  { prompt: "The semantic ambiguity that arises when it's unclear how far a quantifier such as 'all' or 'some' applies within a sentence.", answers: ["quantifier scope ambiguity","quantifier scope"] },
+  { prompt: "The semantic ambiguity that occurs when a pronoun or referring expression can be linked to multiple possible antecedents.", answers: ["anaphoric ambiguity","anaphoric"] },
+  { prompt: "The pragmatic ambiguity that arises when it's unclear who or what an expression like 'this,' 'that,' or 'there' refers to.", answers: ["deictic ambiguity","deictic"] },
+  { prompt: "The pragmatic phenomenon where the intended meaning is the opposite of the literal meaning, as in 'Oh, great! Another meeting!'", answers: ["irony","sarcasm","irony/sarcasm"] },
+  { prompt: "Distinct forms of a language spoken by specific groups, often distinguished by geographical region, with unique vocabulary, grammar, or pronunciation.", answers: ["dialectal variation","dialect","dialects"] },
+  { prompt: "Variations in language used by specific social groups, often influenced by class, education, or occupation.", answers: ["sociolect","sociolects"] },
+  { prompt: "The unique form of language used by an individual, reflecting personal word choice, pronunciation, and background.", answers: ["idiolect","idiolects"] },
+  { prompt: "The 1950s memorandum that framed translating languages as decoding a secret message, grounded in Information Theory.", answers: ["translation memorandum","warren weaver's translation memorandum","weaver's translation memorandum"] },
+  { prompt: "The 1950 test developed by Alan Turing to determine whether a machine could copy a human's way of speaking.", answers: ["turing test"] },
+  { prompt: "The 1954 machine translation demonstration that translated 49 scripted Russian chemistry sentences into English.", answers: ["georgetown-ibm experiment","georgetown ibm experiment","georgetown-ibm"] },
+  { prompt: "The 1957 theory by Noam Chomsky proposing that language has an infinite number of possible sentences, structured as subject + word + object.", answers: ["generative grammar"] },
+  { prompt: "The 1966 chatbot by Joseph Weizenbaum that mimicked a psychotherapist by echoing back the user's own keywords.", answers: ["eliza"] },
+  { prompt: "The 1966 U.S. government committee that judged NLP to be more expensive, slower, and less accurate than human translators.", answers: ["alpac","automatic language processing advisory committee"] },
+  { prompt: "The period of reduced funding for NLP projects that followed ALPAC's negative report.", answers: ["ai winter"] },
+  { prompt: "The 1980s symbolic NLP approach in which knowledgebases stored words, phrases, or sentences to predict what came next.", answers: ["expert systems"] },
+  { prompt: "A class of neural networks that accept sequential input and use internal memory loops to process sequences of variable length.", answers: ["rnn","recurrent neural networks","recurrent neural network"] },
+  { prompt: "The 2000s technique of grouping common or similar words together to determine their relationships.", answers: ["word embeddings","word embedding"] },
+  { prompt: "The machine translation product launched in 2006.", answers: ["google translate"] },
+  { prompt: "The decade in which Case Grammar, Semantic Network, and Conceptual Dependency Theory were all introduced.", answers: ["1970s","1970"] },
+  { prompt: "The approach developed in the late 1980s to early 1990s that identified patterns in data, marking the closest step yet toward machine learning.", answers: ["statistical approaches","statistical approach"] },
+  { prompt: "The two global linguistic challenges that arise from the world having roughly 6,000–7,000 languages without one shared native tongue.", answers: ["language diversity and language barriers","language diversity","language barriers","global linguistic challenges"] }
+];
+
+// 50-item Application MCQ pool — 30 are drawn per load.
+const MCQ_POOL = [
+  { prompt: "A dataset stored in a spreadsheet with clearly labeled columns and rows is an example of:", options: ["Structured text","Unstructured text","Lexical ambiguity","Pragmatic ambiguity"], correct: 0 },
+  { prompt: "A collection of casual tweets and social media posts is best classified as:", options: ["Unstructured text","Structured text","Tokenized text","Normalized text"], correct: 0 },
+  { prompt: "Which of the following is NOT listed as an application of NLP?", options: ["Machine Translation","Sentiment Analysis","Spam Detection","Image Compression"], correct: 3 },
+  { prompt: "Splitting the sentence 'NLP is fascinating' into ['NLP','is','fascinating'] demonstrates:", options: ["Tokenization","Stemming","Lemmatization","Named Entity Recognition"], correct: 0 },
+  { prompt: "Reducing 'running' to 'run' by chopping off the suffix, without considering context, is an example of:", options: ["Stemming","Lemmatization","POS tagging","Text normalization"], correct: 0 },
+  { prompt: "Determining that 'better' should map to its dictionary base form 'good' requires:", options: ["Lemmatization","Stemming","Tokenization","Stop word removal"], correct: 0 },
+  { prompt: "Tagging the word 'run' as a verb in 'I run every morning' is an example of:", options: ["POS tagging","Named Entity Recognition","Stemming","Text normalization"], correct: 0 },
+  { prompt: "Identifying 'Paris' as a location and 'Elon Musk' as a person in a news article is an example of:", options: ["Named Entity Recognition","POS tagging","Lemmatization","Coreference resolution"], correct: 0 },
+  { prompt: "Removing words like 'the,' 'is,' and 'at' from a document before analysis is called:", options: ["Stop word removal","Stemming","Tokenization","Normalization"], correct: 0 },
+  { prompt: "Lowercasing text and expanding contractions like 'don't' to 'do not' is part of:", options: ["Text normalization","Lemmatization","Tokenization","Named Entity Recognition"], correct: 0 },
+  { prompt: "NLU combined with NLG together make up:", options: ["NLP","AI generally","Machine Learning","NLU alone"], correct: 0 },
+  { prompt: "In the human cognitive analog of language processing, identifying concepts and ideas before speaking corresponds to:", options: ["Conceptualization","Formulation","Articulation","Normalization"], correct: 0 },
+  { prompt: "Structuring linguistic elements around an already-identified concept corresponds to:", options: ["Formulation","Conceptualization","Articulation","Tokenization"], correct: 0 },
+  { prompt: "Expressing a formulated thought through speech, writing, or sign corresponds to:", options: ["Articulation","Formulation","Conceptualization","Generation"], correct: 0 },
+  { prompt: "English used as a common bridge language between speakers of different native languages is an example of:", options: ["Lingua franca","Sociolect","Idiolect","Dialect"], correct: 0 },
+  { prompt: "A language that lacks large annotated corpora or parallel text needed to train accurate NLP models is described as:", options: ["Low-resource","High-resource","Structured","Normalized"], correct: 0 },
+  { prompt: "The idea that the structure of a language shapes how its speakers perceive the world is known as the:", options: ["Sapir–Whorf Hypothesis","Turing Test","Generative Grammar","ALPAC Report"], correct: 0 },
+  { prompt: "'I saw a man with a telescope' is ambiguous because it's unclear who has the telescope. This is an example of:", options: ["Attachment ambiguity","Coordination ambiguity","Deictic ambiguity","Quantifier scope ambiguity"], correct: 0 },
+  { prompt: "'Old men and women were admitted free' is ambiguous about whether 'old' applies to both nouns. This illustrates:", options: ["Coordination ambiguity","Attachment ambiguity","Anaphoric ambiguity","Polysemy"], correct: 0 },
+  { prompt: "'All students read some books' is ambiguous about whether students read the same or different books. This is:", options: ["Quantifier scope ambiguity","Anaphoric ambiguity","Deictic ambiguity","Attachment ambiguity"], correct: 0 },
+  { prompt: "'John told Peter he would win' is ambiguous about who 'he' refers to. This illustrates:", options: ["Anaphoric ambiguity","Deictic ambiguity","Coordination ambiguity","Lexical ambiguity"], correct: 0 },
+  { prompt: "'I'll meet you there' is ambiguous because the location isn't specified. This is:", options: ["Deictic ambiguity","Anaphoric ambiguity","Semantic ambiguity","Pragmatic irony"], correct: 0 },
+  { prompt: "'Oh, great! Another meeting!' said with obvious frustration is an example of:", options: ["Irony / sarcasm","Deictic ambiguity","Homonymy","Polysemy"], correct: 0 },
+  { prompt: "'Bank' meaning both 'financial institution' and 'river bank' illustrates:", options: ["Homonymy","Polysemy","Coordination ambiguity","Quantifier scope ambiguity"], correct: 0 },
+  { prompt: "'Head' meaning both 'top of the body' and 'leader of an organization' illustrates:", options: ["Polysemy","Homonymy","Anaphoric ambiguity","Deictic ambiguity"], correct: 0 },
+  { prompt: "In 'The man couldn't lift his son because he was so heavy,' the pronoun 'he' refers to:", options: ["The son","The man","Neither","Both equally"], correct: 0 },
+  { prompt: "In 'The man couldn't lift his son because he was so weak,' the pronoun 'he' refers to:", options: ["The man","The son","Neither","Both equally"], correct: 0 },
+  { prompt: "In 'Jane made sure to thank Susan for all the help she had received,' 'she' refers to:", options: ["Jane","Susan","Both","Neither"], correct: 0 },
+  { prompt: "In 'Jane made sure to thank Susan for all the help she had given,' 'she' refers to:", options: ["Susan","Jane","Both","Neither"], correct: 0 },
+  { prompt: "In 'John promised Bill to leave so an hour later he left,' 'he' refers to:", options: ["John","Bill","Both","Neither"], correct: 0 },
+  { prompt: "In 'John ordered Bill to leave so an hour later he left,' 'he' refers to:", options: ["Bill","John","Both","Neither"], correct: 0 },
+  { prompt: "American 'truck' versus British/Indian 'lorry' for the same vehicle is an example of a:", options: ["Dialectal variation","Sociolect","Idiolect","Homonym"], correct: 0 },
+  { prompt: "Saying 'Good morning, how are you?' formally versus 'Hey, what's up?' informally reflects a:", options: ["Sociolect","Dialect","Idiolect","Lingua franca"], correct: 0 },
+  { prompt: "A person who habitually says 'you know' as a personal speech habit demonstrates an:", options: ["Idiolect","Dialect","Sociolect","Lingua franca"], correct: 0 },
+  { prompt: "A major challenge for NLP systems is correctly interpreting tone-dependent meaning such as sarcasm. This falls under:", options: ["Understanding context","Bias and hallucination","Limited reasoning","Text normalization"], correct: 0 },
+  { prompt: "An NLP system confidently generating false or fabricated information is an example of the challenge known as:", options: ["Hallucination","Lemmatization","Coreference resolution","Tokenization"], correct: 0 },
+  { prompt: "According to the comparison of humans and machines, deeper reasoning and empathy are attributed to:", options: ["Humans","Machines","Both equally","Neither"], correct: 0 },
+  { prompt: "According to the comparison of humans and machines, generating information based on context is attributed to:", options: ["Machines","Humans","Both equally","Neither"], correct: 0 },
+  { prompt: "Warren Weaver's 'Translation Memorandum' compared translating a language to:", options: ["Decoding a secret message","Playing a strategy game","Teaching a child","Writing a dictionary"], correct: 0 },
+  { prompt: "Alan Turing's 1950 test to determine if a machine could imitate human conversation was later criticized because:", options: ["A machine could mimic conversational structure without real understanding","It required too much computing power","It only worked for English","It was immediately replaced by ALPAC"], correct: 0 },
+  { prompt: "The 1954 Georgetown-IBM demonstration translated 49 Russian sentences into English, but critics noted the sentences were:", options: ["Cherry-picked and scripted","Randomly generated","Written entirely by a machine","Untranslatable"], correct: 0 },
+  { prompt: "Noam Chomsky's 1957 concept of 'generative grammar' proposed that language:", options: ["Has an infinite number of possible sentences","Has a fixed, finite set of sentences","Cannot be structured logically","Is impossible for machines to model"], correct: 0 },
+  { prompt: "ELIZA, the 1966 chatbot, simulated a psychotherapist mainly by:", options: ["Echoing back the user's own keywords","Understanding user emotions deeply","Learning from millions of conversations","Translating between languages"], correct: 0 },
+  { prompt: "The ALPAC report of 1966 concluded machine translation was more expensive, slower, and less accurate than humans, which led to:", options: ["The AI Winter","The rise of Google Translate","The creation of RNNs","The Turing Test"], correct: 0 },
+  { prompt: "Case Grammar, Semantic Network, and Conceptual Dependency Theory were introduced during the:", options: ["1970s","1950s","1980s","2000s"], correct: 0 },
+  { prompt: "Knowledgebases used to store words, phrases, or sentences to predict the next one describe the symbolic approach of the:", options: ["1980s Expert Systems","1950s Machine Translation","1966 ELIZA chatbot","2000s Word Embeddings"], correct: 0 },
+  { prompt: "Recurrent Neural Networks became critical to early neural translation because they:", options: ["Use internal memory loops to process sequences of variable length","Only work on fixed-length inputs","Remove stop words automatically","Translate without any training data"], correct: 0 },
+  { prompt: "Grouping common or similar words together to determine their relationships describes the 2000s advance known as:", options: ["Word embeddings","Expert systems","Generative grammar","The Turing Test"], correct: 0 },
+  { prompt: "'He found his train in the pen' is ambiguous because both 'train' and 'pen' have multiple distinct meanings. This is primarily an example of:", options: ["Lexical ambiguity","Coordination ambiguity","Deictic ambiguity","Sociolect variation"], correct: 0 }
+];
+
+/* =======================================================
+   HELPERS
+   ======================================================= */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function norm(s){
+  return String(s).toLowerCase().trim().replace(/[.,!?;:'"()]/g, '').replace(/\s+/g, ' ');
+}
+
+let currentID = [];
+let currentMCQ = [];
+
+/* =======================================================
+   BUILD EXAM
+   ======================================================= */
+function buildExam(){
+  currentID = shuffle(ID_POOL).slice(0, 20);
+  currentMCQ = shuffle(MCQ_POOL).slice(0, 30).map(q => {
+    const correctText = q.options[q.correct];
+    const shuffledOptions = shuffle(q.options);
+    return { prompt: q.prompt, options: shuffledOptions, correctText };
+  });
+
+  const idContainer = document.getElementById('idContainer');
+  idContainer.innerHTML = '';
+  currentID.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'q';
+    div.dataset.index = i;
+    div.innerHTML = `
+      <div class="q-num">Item ${i + 1}</div>
+      <div class="q-prompt">${q.prompt}</div>
+      <input type="text" class="id-input" name="id-${i}" placeholder="Type the term...">
+      <div class="verdict" style="display:none;"></div>
+    `;
+    idContainer.appendChild(div);
+  });
+
+  const mcqContainer = document.getElementById('mcqContainer');
+  mcqContainer.innerHTML = '';
+  currentMCQ.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'q';
+    div.dataset.index = i;
+    const optsHtml = q.options.map((opt, oi) => `
+      <label class="opt" data-opt="${oi}">
+        <input type="radio" name="mcq-${i}" value="${oi}">
+        <span>${opt}</span>
+      </label>
+    `).join('');
+    div.innerHTML = `
+      <div class="q-num">Item ${21 + i}</div>
+      <div class="q-prompt">${q.prompt}</div>
+      <div class="options">${optsHtml}</div>
+      <div class="verdict" style="display:none;"></div>
+    `;
+    mcqContainer.appendChild(div);
+  });
+
+  // click-to-highlight selected radio option
+  mcqContainer.querySelectorAll('.opt').forEach(label => {
+    label.addEventListener('click', () => {
+      const group = label.closest('.options');
+      group.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+      label.classList.add('selected');
+    });
+  });
+
+  // reset results
+  document.getElementById('resultsBanner').classList.remove('show');
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Submit Exam';
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+}
+
+/* =======================================================
+   GRADE EXAM
+   ======================================================= */
+document.getElementById('examForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  let correctCount = 0;
+  let idCorrect = 0;
+  let mcqCorrect = 0;
+
+  // Grade identification
+  document.querySelectorAll('#idContainer .q').forEach((div) => {
+    const i = parseInt(div.dataset.index, 10);
+    const q = currentID[i];
+    const input = div.querySelector('.id-input');
+    const verdict = div.querySelector('.verdict');
+    const userVal = norm(input.value);
+    const isCorrect = q.answers.some(a => norm(a) === userVal) && userVal.length > 0;
+
+    input.disabled = true;
+    div.classList.add(isCorrect ? 'correct' : 'incorrect');
+    input.classList.add(isCorrect ? 'correct' : 'incorrect');
+    verdict.style.display = 'block';
+    verdict.className = 'verdict ' + (isCorrect ? 'correct' : 'incorrect');
+    verdict.innerHTML = (isCorrect ? '\u2713 Correct' : '\u2717 Incorrect') +
+      '<div class="answer-line">Accepted answer: ' + q.answers[0] + '</div>';
+
+    if (isCorrect) { correctCount++; idCorrect++; }
+  });
+
+  // Grade MCQ
+  document.querySelectorAll('#mcqContainer .q').forEach((div) => {
+    const i = parseInt(div.dataset.index, 10);
+    const q = currentMCQ[i];
+    const selected = div.querySelector('input[type="radio"]:checked');
+    const verdict = div.querySelector('.verdict');
+    const opts = div.querySelectorAll('.opt');
+    const selectedIndex = selected ? parseInt(selected.value, 10) : -1;
+    const isCorrect = selected && q.options[selectedIndex] === q.correctText;
+
+    opts.forEach((opt, oi) => {
+      opt.querySelector('input').disabled = true;
+      if (q.options[oi] === q.correctText) opt.classList.add('correct-answer');
+      if (oi === selectedIndex && !isCorrect) opt.classList.add('wrong-picked');
+    });
+
+    div.classList.add(isCorrect ? 'correct' : 'incorrect');
+    verdict.style.display = 'block';
+    verdict.className = 'verdict ' + (isCorrect ? 'correct' : 'incorrect');
+    verdict.innerHTML = (isCorrect ? '\u2713 Correct' : '\u2717 Incorrect') +
+      '<div class="answer-line">Correct answer: ' + q.correctText + '</div>';
+
+    if (isCorrect) { correctCount++; mcqCorrect++; }
+  });
+
+  const total = currentID.length + currentMCQ.length;
+  const pct = Math.round((correctCount / total) * 100);
+
+  const banner = document.getElementById('resultsBanner');
+  document.getElementById('scoreBig').textContent = correctCount + ' / ' + total + '  (' + pct + '%)';
+  document.getElementById('scoreSub').textContent =
+    'Identification: ' + idCorrect + ' / ' + currentID.length +
+    '   ·   Application: ' + mcqCorrect + ' / ' + currentMCQ.length;
+  banner.classList.add('show');
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').textContent = 'Exam submitted';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+document.getElementById('reshuffleBtn').addEventListener('click', buildExam);
+
+buildExam();
+</script>
+
+</body>
+</html>

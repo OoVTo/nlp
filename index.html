@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decoding Language — NLP Field Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ece8df;
+    --paper-raised:#f4f1e9;
+    --ink:#20241f;
+    --ink-soft:#54554c;
+    --rule:#c9c3b3;
+    --lexical:#c1791f;
+    --syntactic:#2f7f74;
+    --semantic:#b0395a;
+    --pragmatic:#5b57a6;
+    --accent:#2f7f74;
+    --max:720px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    font-size:17px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:#d9c98a; }
+
+  h1,h2,h3,h4{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    line-height:1.15;
+    margin:0 0 .5em 0;
+    letter-spacing:-0.01em;
+  }
+  a{ color:var(--accent); }
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Layout shell ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns:250px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width:880px){
+    .shell{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    overflow-y:auto;
+    padding:2.2rem 1.6rem 2rem 2rem;
+    border-right:1px solid var(--rule);
+  }
+  @media (max-width:880px){
+    .sidebar{
+      position:relative;
+      height:auto;
+      border-right:none;
+      border-bottom:1px solid var(--rule);
+      padding:1.5rem 1.5rem 1rem;
+    }
+  }
+  .brand{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.28rem;
+    margin-bottom:.15rem;
+    letter-spacing:-0.02em;
+  }
+  .brand em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--ink-soft);
+    font-size:.85em;
+  }
+  .brand-sub{
+    font-size:.78rem;
+    color:var(--ink-soft);
+    margin-bottom:2rem;
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:.02em;
+  }
+  nav.toc{
+    display:flex;
+    flex-direction:column;
+    gap:1.4rem;
+  }
+  .toc-group-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.68rem;
+    color:var(--ink-soft);
+    letter-spacing:.06em;
+    margin-bottom:.4rem;
+  }
+  .toc-group a{
+    display:block;
+    text-decoration:none;
+    color:var(--ink);
+    font-size:.92rem;
+    padding:.22rem 0 .22rem .6rem;
+    border-left:2px solid transparent;
+    transition:border-color .15s ease, color .15s ease, padding-left .15s ease;
+  }
+  .toc-group a:hover{ border-left-color:var(--rule); padding-left:.8rem; }
+  .toc-group a.active{
+    border-left-color:var(--accent);
+    color:var(--accent);
+    font-weight:600;
+  }
+
+  /* ---------- Main ---------- */
+  main{ min-width:0; }
+
+  .hero{
+    padding:4rem 2.4rem 3rem;
+    border-bottom:1px solid var(--rule);
+    max-width:980px;
+  }
+  .hero-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    color:var(--ink-soft);
+    margin-bottom:1.1rem;
+  }
+  .hero h1{
+    font-size:clamp(2.1rem, 4.4vw, 3.4rem);
+    max-width:14ch;
+  }
+  .hero p.lede{
+    max-width:56ch;
+    font-size:1.12rem;
+    color:var(--ink-soft);
+    margin-top:1rem;
+  }
+
+  /* Interactive ambiguity demo in hero */
+  .demo{
+    margin-top:2.4rem;
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:1.4rem 1.6rem 1.6rem;
+    max-width:620px;
+  }
+  .demo-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    letter-spacing:.04em;
+    margin-bottom:.8rem;
+  }
+  .demo-select{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+    padding:.4rem .6rem;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    color:var(--ink);
+    border-radius:2px;
+    margin-bottom:1rem;
+  }
+  .token-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.4rem;
+    margin-bottom:1.1rem;
+  }
+  .token{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.82rem;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    padding:.28rem .55rem;
+    border-radius:2px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.15rem;
+  }
+  .token .pos{
+    font-size:.65rem;
+    color:var(--ink-soft);
+  }
+  .token.hot{ border-color:var(--semantic); }
+  .token.hot .pos{ color:var(--semantic); font-weight:600; }
+  .reading-toggle{
+    display:flex;
+    gap:.5rem;
+    margin-bottom:.8rem;
+  }
+  .reading-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.74rem;
+    padding:.42rem .8rem;
+    border:1px solid var(--rule);
+    background:var(--paper);
+    color:var(--ink);
+    cursor:pointer;
+    border-radius:2px;
+  }
+  .reading-btn.active{
+    background:var(--semantic);
+    border-color:var(--semantic);
+    color:#fff;
+  }
+  .reading-out{
+    font-size:.94rem;
+    color:var(--ink-soft);
+    font-style:italic;
+    min-height:1.4em;
+  }
+
+  /* ---------- Sections ---------- */
+  section.part{
+    padding:3.2rem 2.4rem;
+    border-bottom:1px solid var(--rule);
+    max-width:980px;
+  }
+  .part-kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem;
+    color:var(--ink-soft);
+    letter-spacing:.05em;
+    margin-bottom:.5rem;
+  }
+  .part h2{
+    font-size:clamp(1.6rem,3vw,2.15rem);
+    max-width:20ch;
+    margin-bottom:1.8rem;
+    padding-bottom:1.2rem;
+    border-bottom:1px solid var(--rule);
+  }
+  .content{ max-width:var(--max); }
+  .content h3{
+    font-size:1.28rem;
+    margin-top:2.6rem;
+    margin-bottom:.9rem;
+  }
+  .content h4{
+    font-size:1.02rem;
+    margin-top:1.6rem;
+    margin-bottom:.6rem;
+    color:var(--ink);
+  }
+  .content p{ margin:0 0 1rem 0; }
+  .content ul, .content ol{
+    margin:0 0 1.1rem 0;
+    padding-left:1.3rem;
+  }
+  .content li{ margin-bottom:.45rem; }
+
+  /* Definition entries — dictionary-style */
+  .entry{
+    margin-bottom:1.5rem;
+    padding-left:1rem;
+    border-left:2px solid var(--rule);
+  }
+  .entry .term{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.05rem;
+    display:inline;
+  }
+  .entry .term::after{
+    content:"";
+  }
+  .entry .abbr{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.75rem;
+    color:var(--ink-soft);
+    margin-left:.4rem;
+  }
+  .entry p{ margin:.35rem 0 0 0; color:var(--ink-soft); }
+
+  /* Application chips */
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem;
+    margin:1rem 0 1.6rem;
+  }
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.8rem;
+    border:1px solid var(--rule);
+    padding:.4rem .75rem;
+    border-radius:2px;
+    background:var(--paper-raised);
+  }
+
+  /* Formula box */
+  .formula{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:1.05rem;
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    padding:.9rem 1.2rem;
+    border-radius:2px;
+    display:inline-block;
+    margin:.6rem 0 1.6rem;
+  }
+  .formula .op{ color:var(--accent); margin:0 .35rem; }
+
+  /* Cognitive steps */
+  .steps{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    margin:1.2rem 0 1.8rem;
+    border-top:1px solid var(--rule);
+  }
+  .step{
+    display:grid;
+    grid-template-columns:2.4rem 1fr;
+    gap:1rem;
+    padding:1rem 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .step .num{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--ink-soft);
+    font-size:.85rem;
+    padding-top:.1rem;
+  }
+  .step .step-title{ font-weight:600; margin-bottom:.15rem; }
+  .step .step-body{ color:var(--ink-soft); font-size:.95rem; }
+
+  /* Comparison table */
+  table.compare{
+    width:100%;
+    border-collapse:collapse;
+    margin:1rem 0 1.8rem;
+    font-size:.95rem;
+  }
+  table.compare th{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.75rem;
+    text-align:left;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    padding:.6rem .8rem;
+    border-bottom:2px solid var(--ink);
+  }
+  table.compare td{
+    padding:.7rem .8rem;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+
+  /* Challenge tags */
+  .tag-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.5rem;
+    margin:0 0 1.6rem;
+  }
+  .tag-list li{
+    list-style:none;
+    font-size:.88rem;
+    border:1px solid var(--semantic);
+    color:var(--semantic);
+    padding:.35rem .7rem;
+    border-radius:20px;
+    margin:0;
+  }
+
+  /* ---------- Timeline (history) ---------- */
+  .timeline{
+    position:relative;
+    margin:1.5rem 0 1rem;
+    padding-left:1.6rem;
+    border-left:2px solid var(--rule);
+  }
+  .tl-item{
+    position:relative;
+    padding-bottom:2rem;
+  }
+  .tl-item::before{
+    content:"";
+    position:absolute;
+    left:-1.7rem;
+    top:.35rem;
+    width:.6rem;
+    height:.6rem;
+    background:var(--accent);
+    border-radius:50%;
+  }
+  .tl-year{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.85rem;
+    color:var(--accent);
+    font-weight:600;
+    margin-bottom:.3rem;
+  }
+  .tl-body p{ margin:0 0 .6rem 0; }
+  .tl-body p:last-child{ margin-bottom:0; }
+  .tl-sub{
+    color:var(--ink-soft);
+    font-size:.92rem;
+  }
+
+  /* ---------- Ambiguity cards ---------- */
+  .amb-nav{
+    display:flex;
+    gap:.5rem;
+    flex-wrap:wrap;
+    margin:1.2rem 0 1.6rem;
+  }
+  .amb-tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    padding:.45rem .85rem;
+    border:1px solid var(--rule);
+    background:var(--paper-raised);
+    cursor:pointer;
+    border-radius:2px;
+    color:var(--ink-soft);
+  }
+  .amb-tab[data-type="lexical"].active{ background:var(--lexical); border-color:var(--lexical); color:#fff; }
+  .amb-tab[data-type="syntactic"].active{ background:var(--syntactic); border-color:var(--syntactic); color:#fff; }
+  .amb-tab[data-type="semantic"].active{ background:var(--semantic); border-color:var(--semantic); color:#fff; }
+  .amb-tab[data-type="pragmatic"].active{ background:var(--pragmatic); border-color:var(--pragmatic); color:#fff; }
+
+  .amb-panel{ display:none; }
+  .amb-panel.active{ display:block; }
+  .amb-card{
+    border:1px solid var(--rule);
+    border-left-width:4px;
+    border-radius:2px;
+    padding:1.1rem 1.3rem;
+    margin-bottom:1rem;
+    background:var(--paper-raised);
+  }
+  .amb-panel[data-type="lexical"] .amb-card{ border-left-color:var(--lexical); }
+  .amb-panel[data-type="syntactic"] .amb-card{ border-left-color:var(--syntactic); }
+  .amb-panel[data-type="semantic"] .amb-card{ border-left-color:var(--semantic); }
+  .amb-panel[data-type="pragmatic"] .amb-card{ border-left-color:var(--pragmatic); }
+  .amb-card h4{ margin-top:0; }
+  .amb-example{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.88rem;
+    background:var(--paper);
+    padding:.5rem .7rem;
+    border-radius:2px;
+    margin:.5rem 0;
+    display:inline-block;
+  }
+
+  /* Coreference pairs */
+  .coref-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1rem;
+    margin:1rem 0 1.8rem;
+  }
+  @media (max-width:600px){ .coref-grid{ grid-template-columns:1fr; } }
+  .coref-card{
+    border:1px solid var(--rule);
+    padding:.9rem 1rem;
+    border-radius:2px;
+    font-size:.92rem;
+    background:var(--paper-raised);
+  }
+  .coref-card .sentence{ margin-bottom:.5rem; }
+  .coref-card mark{
+    background:none;
+    color:var(--semantic);
+    font-weight:600;
+    text-decoration:underline;
+    text-decoration-style:dotted;
+  }
+  .coref-card .resolve{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    color:var(--ink-soft);
+  }
+
+  /* Variation cards (dialect/sociolect/idiolect) */
+  .var-cards{
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+    margin:1.2rem 0 1.6rem;
+  }
+  .var-card{
+    display:grid;
+    grid-template-columns:9rem 1fr;
+    gap:1rem;
+    border-top:1px solid var(--rule);
+    padding-top:1rem;
+  }
+  @media (max-width:600px){ .var-card{ grid-template-columns:1fr; } }
+  .var-card .var-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.02rem;
+  }
+  .var-card .var-body p{ margin:0 0 .5rem 0; color:var(--ink-soft); font-size:.95rem; }
+  .var-card .var-body em{ color:var(--ink); font-style:normal; font-family:'IBM Plex Mono', monospace; font-size:.85rem; }
+
+  footer{
+    padding:2.4rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    color:var(--ink-soft);
+    max-width:980px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">Decoding Language <em>notes</em></div>
+    <div class="brand-sub">NLP = NLU + NLG</div>
+    <nav class="toc" id="toc">
+      <div class="toc-group">
+        <div class="toc-group-label">PART 1</div>
+        <a href="#part1" data-target="part1">Introduction to NLP</a>
+      </div>
+      <div class="toc-group">
+        <div class="toc-group-label">LESSON 1</div>
+        <a href="#part2" data-target="part2">Fundamentals of Natural Language</a>
+      </div>
+      <div class="toc-group">
+        <div class="toc-group-label">LESSON 2</div>
+        <a href="#part3" data-target="part3">History &amp; Evolution of NLP</a>
+      </div>
+      <div class="toc-group">
+        <div class="toc-group-label">LESSON 3</div>
+        <a href="#part4" data-target="part4">Linguistic Complexity &amp; Ambiguity</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+
+    <!-- ---------- HERO ---------- -->
+    <section class="hero">
+      <div class="hero-eyebrow">Field notes on how machines read</div>
+      <h1>He found his train in the pen.</h1>
+      <p class="lede">One sentence, several machine-readable readings. Natural Language Processing is the discipline of teaching software to choose the right one — pick a phrase below and see how it might be tokenized and tagged.</p>
+
+      <div class="demo">
+        <div class="demo-label">TRY IT — AMBIGUOUS SENTENCE TOKENIZER</div>
+        <select class="demo-select" id="sentencePicker">
+          <option value="0">I saw her duck.</option>
+          <option value="1">He found his train in the pen.</option>
+          <option value="2">The bank was steep by the bank.</option>
+        </select>
+        <div class="token-row" id="tokenRow"></div>
+        <div class="reading-toggle" id="readingToggle"></div>
+        <div class="reading-out" id="readingOut"></div>
+      </div>
+    </section>
+
+    <!-- ============ PART 1 ============ -->
+    <section class="part" id="part1">
+      <div class="part-kicker">PART 1</div>
+      <h2>Introduction to Natural Language Processing</h2>
+      <div class="content">
+
+        <h3>Unstructured and structured text</h3>
+        <div class="entry">
+          <span class="term">Structured Text</span>
+          <p>Data organized in a predefined format, schema, or model — SQL databases, CSV files, spreadsheets — making it easily searchable and manageable by algorithms.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Unstructured Text</span>
+          <p>Data without a predefined conceptual model or structure — emails, social media posts, articles, videos — requiring processing techniques like NLP to analyze.</p>
+        </div>
+
+        <h3>Core concepts of NLP</h3>
+        <div class="entry">
+          <span class="term">Natural Language Understanding</span><span class="abbr">NLU</span>
+          <p>Focuses on machine reading comprehension and interpreting human language intent, context, and semantics.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Natural Language Generation</span><span class="abbr">NLG</span>
+          <p>Focuses on producing text or speech responses from structured data or internal representations.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Natural Language Processing</span><span class="abbr">NLP</span>
+          <p>The broader field combining NLU and NLG (NLP = NLU + NLG) to enable communication between machines and humans.</p>
+        </div>
+
+        <h4>Applications of NLP</h4>
+        <div class="chips">
+          <span class="chip">Virtual Assistants &amp; Chatbots</span>
+          <span class="chip">Machine Translation</span>
+          <span class="chip">Sentiment Analysis</span>
+          <span class="chip">Spam Detection</span>
+        </div>
+
+        <h3>Key NLP operations and techniques</h3>
+        <div class="entry">
+          <span class="term">Tokenization</span>
+          <p>The process of breaking down a text into smaller units called tokens (e.g., words, subwords, or characters).</p>
+        </div>
+        <div class="entry">
+          <span class="term">Tokens</span>
+          <p>Individual units or pieces of language — such as words, punctuation, or symbols — obtained through tokenization.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Stemming</span>
+          <p>The process of reducing words to their root or stem form by chopping off affixes (e.g., "running" → "run"), often using crude heuristic rules.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Lemmatization</span>
+          <p>The process of determining the dictionary base form, or lemma, of a word based on its intended context and morphological analysis (e.g., "better" → "good").</p>
+        </div>
+        <div class="entry">
+          <span class="term">POS Tagging</span><span class="abbr">Part of Speech</span>
+          <p>The process of marking up a word in a text to correspond to a particular part of speech (noun, verb, adjective, etc.) based on both its definition and context.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Named Entity Recognition</span><span class="abbr">NER</span>
+          <p>An information extraction task that identifies and classifies key entities in text into predefined categories such as person names, organizations, locations, dates, and quantities.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Text Normalization</span>
+          <p>The process of converting text into a standard, consistent format — lowercasing, expanding contractions, removing punctuation.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Stop Word Removal</span>
+          <p>The technique of filtering out common, high-frequency words (e.g., "the," "is," "at") that carry little domain-specific semantic value.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ PART 2 / LESSON 1 ============ -->
+    <section class="part" id="part2">
+      <div class="part-kicker">LESSON 1</div>
+      <h2>Fundamentals of Natural Language</h2>
+      <div class="content">
+
+        <h3>Natural language</h3>
+        <p>Language spoken by humans that evolved naturally through use, repetition, and social communication. It is inherently distinct from artificial programming languages and formal logic syntax.</p>
+
+        <h4>Characteristics</h4>
+        <ol>
+          <li><strong>Structured sounds and words</strong> — words are fixed components used for communication in speech, writing, and gesturing.</li>
+          <li><strong>Communication</strong> — represents a core capacity and expression of human intelligence.</li>
+        </ol>
+
+        <h4>Global linguistic challenges</h4>
+        <ul>
+          <li>Language Diversity</li>
+          <li>Language Barriers</li>
+        </ul>
+
+        <div class="entry">
+          <span class="term">Lingua Franca</span>
+          <p>A bridge language systematically used to make communication possible between groups of people who do not share a native language (e.g., English globally).</p>
+        </div>
+
+        <h3>Natural Language Processing (NLP)</h3>
+        <p>An interdisciplinary subfield of artificial intelligence, computer science, and linguistics focused on giving computers the ability to understand, interpret, process, and generate human language.</p>
+
+        <div class="formula">NLP <span class="op">=</span> NLU <span class="op">+</span> NLG</div>
+
+        <div class="entry">
+          <span class="term">Natural Language Understanding</span><span class="abbr">NLU</span>
+          <p>Analyzes input language to enable machine comprehension, parsing intent, and structuring data for computational use.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Natural Language Generation</span><span class="abbr">NLG</span>
+          <p>Translates computer data and knowledge into fluent, human-readable output text or speech.</p>
+        </div>
+
+        <h4>Human cognitive analog of processing (NLU + NLG)</h4>
+        <div class="steps">
+          <div class="step">
+            <div class="num">1</div>
+            <div>
+              <div class="step-title">Conceptualization</div>
+              <div class="step-body">Identifying concepts and ideas.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">2</div>
+            <div>
+              <div class="step-title">Formulation</div>
+              <div class="step-body">Combining and structuring linguistic structures around concepts.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">3</div>
+            <div>
+              <div class="step-title">Articulation</div>
+              <div class="step-body">Expressing the formulated linguistic structure via speech, writing, or sign.</div>
+            </div>
+          </div>
+        </div>
+
+        <h4>Major NLP system challenges</h4>
+        <ul class="tag-list">
+          <li>Understanding context, like sarcasm</li>
+          <li>Limited reasoning</li>
+          <li>Bias and hallucination</li>
+        </ul>
+
+        <h4>Key differences: humans vs. machines in language</h4>
+        <table class="compare">
+          <thead>
+            <tr><th>Humans</th><th>Machines</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Natural intelligence / language</td><td>Artificial intelligence / language</td></tr>
+            <tr><td>Deeper reasoning or empathy</td><td>Generates information based on context</td></tr>
+          </tbody>
+        </table>
+
+      </div>
+    </section>
+
+    <!-- ============ PART 3 / LESSON 2 ============ -->
+    <section class="part" id="part3">
+      <div class="part-kicker">LESSON 2</div>
+      <h2>History and Evolution of NLP</h2>
+      <div class="content">
+
+        <div class="timeline">
+
+          <div class="tl-item">
+            <div class="tl-year">1950s–1960s</div>
+            <div class="tl-body">
+              <p><strong>Early beginnings of NLP.</strong> Warren Weaver's "Translation Memorandum" treated translating languages like decoding a secret message. The idea was founded on Information Theory, which states that phrases are assumed to be related to one another.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">1950s</div>
+            <div class="tl-body">
+              <p><strong>Machine translation</strong> — the first application of NLP; it was simplistic.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">1950</div>
+            <div class="tl-body">
+              <p><strong>Alan Turing</strong> developed the Turing Test, administered to determine whether a machine could copy a human response, sentence, or way of speaking. It was later deemed flawed, because a machine could easily mimic the structure or way a human talks without truly understanding it.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">1954</div>
+            <div class="tl-body">
+              <p><strong>Georgetown–IBM experiment.</strong> Machine translation was applied to 49 Russian sentences translated into English, all related to chemistry — cherry-picked and scripted.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">1957</div>
+            <div class="tl-body">
+              <p><strong>Noam Chomsky</strong> brought forth "generative grammar": language doesn't have a fixed number of sentences — it's infinite. He also stated that words have logic: subject + word + object.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">1966</div>
+            <div class="tl-body">
+              <p><strong>ELIZA</strong>, a chatbot developed by Joseph Weizenbaum, was designed to act like a psychotherapist but was ineffective — it only echoed back using keywords, scripted rather than understood.</p>
+              <p>That same year, the U.S. government formed the <strong>ALPAC</strong> (Automatic Language Processing Advisory Committee) to evaluate the progress of NLP and computational linguistics. ALPAC judged NLP to be more expensive, slower, and less accurate than a human translator — triggering the <strong>AI Winter</strong>, in which NLP projects lost funding.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">1970s</div>
+            <div class="tl-body">
+              <p>New concepts were introduced: Case Grammar, Semantic Network, and Conceptual Dependency Theory.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">1980s</div>
+            <div class="tl-body">
+              <p><strong>Expert Systems</strong> were introduced (symbolic approaches). Knowledgebases stored words, phrases, or sentences to predict the next words, phrases, or sentences.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">Late 1980s–Early 1990s</div>
+            <div class="tl-body">
+              <p><strong>Statistical approaches</strong> developed — the closest step yet to machine learning, identifying patterns in data.</p>
+              <p class="tl-sub"><strong>Recurrent Neural Networks (RNNs):</strong> a class of artificial neural networks that accept sequential data inputs and use internal memory loops to process sequences of variable length — critical for early neural translation and language modeling.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">2000s</div>
+            <div class="tl-body">
+              <p><strong>Word embeddings</strong> emerged, in which common or similar words are grouped together to determine their relationships.</p>
+            </div>
+          </div>
+
+          <div class="tl-item">
+            <div class="tl-year">2006</div>
+            <div class="tl-body">
+              <p><strong>Google Translate</strong> launched.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <h4>Challenges of the era</h4>
+        <ul>
+          <li>Models were unable to understand relationships.</li>
+          <li>Models had only a few examples to learn from.</li>
+        </ul>
+
+      </div>
+    </section>
+
+    <!-- ============ PART 4 / LESSON 3 ============ -->
+    <section class="part" id="part4">
+      <div class="part-kicker">LESSON 3</div>
+      <h2>Linguistic Complexity and Ambiguity</h2>
+      <div class="content">
+
+        <h3>Why is natural language hard to process?</h3>
+
+        <h4>1. Ambiguity at multiple levels</h4>
+        <ul>
+          <li><strong>Word Senses (Lexical):</strong> e.g., "bank" (financial institution vs. river bank)</li>
+          <li><strong>Part of Speech:</strong> e.g., "chair" (noun: furniture vs. verb: to preside over a meeting)</li>
+          <li><strong>Syntactic Structure:</strong> e.g., "I saw a man with a telescope" (who has the telescope?)</li>
+          <li><strong>Quantifier Scope:</strong> e.g., "Every child loves some movie" (the same movie, or different movies?)</li>
+          <li><strong>Multiple Ambiguities:</strong> e.g., "I saw her duck" (a crouching movement, or a bird she owns?)</li>
+        </ul>
+        <p>NLP algorithms model this ambiguity, and choose the correct analysis in context.</p>
+
+        <h4>2. Linguistic diversity and resource scarcity</h4>
+        <ul>
+          <li>6,000–7,000 languages worldwide, categorized across more than 14 major language families.</li>
+          <li>Languages diverge across all levels of structural hierarchy — no universal plug-and-play solution exists for a single task across all languages.</li>
+          <li>Most languages lack sufficient digital corpora or annotated training resources required to build high-accuracy statistical or neural NLP models.</li>
+        </ul>
+
+        <div class="entry">
+          <span class="term">Sapir–Whorf Hypothesis</span>
+          <p>The linguistic principle proposing that the structure of a language influences or determines its speakers' worldview and cognitive processes.</p>
+        </div>
+        <div class="entry">
+          <span class="term">Low-Resource Languages</span>
+          <p>Languages that lack large monolingual or parallel text corpora, dictionary benchmarks, or expert annotations necessary to build statistical and machine learning models.</p>
+        </div>
+
+        <h3>Contextual &amp; coreference resolution</h3>
+        <p>The same pronoun can resolve to a different antecedent depending on a single word elsewhere in the sentence:</p>
+        <div class="coref-grid">
+          <div class="coref-card">
+            <div class="sentence">"The man couldn't lift his son because <mark>he</mark> was so <strong>weak</strong>."</div>
+            <div class="resolve">→ "he" refers to the man</div>
+          </div>
+          <div class="coref-card">
+            <div class="sentence">"The man couldn't lift his son because <mark>he</mark> was so <strong>heavy</strong>."</div>
+            <div class="resolve">→ "he" refers to the son</div>
+          </div>
+          <div class="coref-card">
+            <div class="sentence">"Jane made sure to thank Susan for all the help <mark>she</mark> had <strong>received</strong>."</div>
+            <div class="resolve">→ "she" = Jane</div>
+          </div>
+          <div class="coref-card">
+            <div class="sentence">"Jane made sure to thank Susan for all the help <mark>she</mark> had <strong>given</strong>."</div>
+            <div class="resolve">→ "she" = Susan</div>
+          </div>
+          <div class="coref-card">
+            <div class="sentence">"John promised Bill to leave so an hour later <mark>he</mark> left." (promised)</div>
+            <div class="resolve">→ "he" = John</div>
+          </div>
+          <div class="coref-card">
+            <div class="sentence">"John ordered Bill to leave so an hour later <mark>he</mark> left." (ordered)</div>
+            <div class="resolve">→ "he" = Bill</div>
+          </div>
+        </div>
+        <p style="color:var(--ink-soft); font-size:.95rem;">Similarly, "Mary and Sue are sisters" versus "Mary and Sue are mothers" require evaluating different relationship structures between the same two entities.</p>
+
+        <h3>Detailed classification of ambiguity types</h3>
+        <div class="entry">
+          <span class="term">Ambiguity</span>
+          <p>A fundamental challenge in NLP where words, phrases, or full sentences yield multiple valid computational interpretations. Example: "He found his train in the pen" — train could mean vehicle or toy; pen could mean writing tool or enclosure.</p>
+        </div>
+
+        <div class="amb-nav" id="ambNav">
+          <button class="amb-tab active" data-type="lexical">Lexical</button>
+          <button class="amb-tab" data-type="syntactic">Syntactic</button>
+          <button class="amb-tab" data-type="semantic">Semantic</button>
+          <button class="amb-tab" data-type="pragmatic">Pragmatic</button>
+        </div>
+
+        <div class="amb-panel active" data-type="lexical">
+          <p>Occurs when an individual word possesses multiple distinct meanings.</p>
+          <div class="amb-card">
+            <h4>Homonyms</h4>
+            <p>Words that sound alike or are spelled alike but have different meanings.</p>
+            <div class="amb-example">bark — the sound a dog makes vs. the outer covering of a tree</div>
+          </div>
+          <div class="amb-card">
+            <h4>Polysemy</h4>
+            <p>A single word with multiple related meanings.</p>
+            <div class="amb-example">head — the top part of the body vs. leader of an organization</div>
+          </div>
+        </div>
+
+        <div class="amb-panel" data-type="syntactic">
+          <p>Occurs when a sentence can be parsed in multiple grammatical ways due to structural syntax.</p>
+          <div class="amb-card">
+            <h4>Attachment</h4>
+            <p>Ambiguity arises when it is unclear which part of the sentence a modifier (e.g., a prepositional phrase) is associated with.</p>
+            <div class="amb-example">He saw the man with the telescope.</div>
+            <p>Did he use a telescope to see the man, or did he see a man who had a telescope?</p>
+          </div>
+          <div class="amb-card">
+            <h4>Coordination</h4>
+            <p>Occurs when it is unclear how conjunctions like "and" or "or" connect different parts of a sentence.</p>
+            <div class="amb-example">Old men and women were admitted free.</div>
+            <p>Were only old men admitted free, or both old men and all women?</p>
+          </div>
+        </div>
+
+        <div class="amb-panel" data-type="semantic">
+          <p>Occurs when a sentence has multiple interpretations even after structural and lexical resolution.</p>
+          <div class="amb-card">
+            <h4>Quantifier Scope Ambiguity</h4>
+            <p>Arises when it's unclear how far a quantifier (like "all" or "some") applies within a sentence.</p>
+            <div class="amb-example">All students read some books.</div>
+            <p>Does it mean each student reads the same books, or different books?</p>
+          </div>
+          <div class="amb-card">
+            <h4>Anaphoric Ambiguity</h4>
+            <p>Occurs when a pronoun or referring expression can be linked to multiple possible antecedents.</p>
+            <div class="amb-example">John told Peter he would win.</div>
+            <p>Is "he" referring to John or Peter?</p>
+          </div>
+        </div>
+
+        <div class="amb-panel" data-type="pragmatic">
+          <p>Occurs when context, tone, or situational cues dictate meaning beyond the literal text.</p>
+          <div class="amb-card">
+            <h4>Deictic Ambiguity</h4>
+            <p>Arises when it is unclear who or what a deictic expression (like "this," "that," "here," "there") refers to.</p>
+            <div class="amb-example">I'll meet you there.</div>
+            <p>Where is "there"?</p>
+          </div>
+          <div class="amb-card">
+            <h4>Irony / Sarcasm</h4>
+            <p>Arises when the intended meaning is the opposite of the literal meaning.</p>
+            <div class="amb-example">Oh, great! Another meeting!</div>
+          </div>
+        </div>
+
+        <h3>Linguistic variations in low-resource contexts</h3>
+        <p>A lack of large annotated datasets and linguistic tools hinders the development of accurate NLP models for many languages, especially given how language varies below the level of "a language":</p>
+
+        <div class="var-cards">
+          <div class="var-card">
+            <div class="var-name">Dialectal variations</div>
+            <div class="var-body">
+              <p>Distinct forms of a language spoken by specific groups, often distinguished by geographical regions. Each dialect can have unique vocabulary, grammar, and pronunciation.</p>
+              <p><em>"truck"</em> (American English) vs. <em>"lorry"</em> (British / Indian English) — same vehicle. Pronunciation of "tomato" (toh-MAH-toh vs. to-MAY-to) also differs between regions.</p>
+            </div>
+          </div>
+          <div class="var-card">
+            <div class="var-name">Sociolects</div>
+            <div class="var-body">
+              <p>Variations in language used by specific social groups, often influenced by class, education, or occupation. The way language is used can signal social identity and status.</p>
+              <p><em>"Good morning, how are you?"</em> (formal) vs. <em>"Hey, what's up?"</em> (informal). Professional jargon — legal, medical — is another sociolect.</p>
+            </div>
+          </div>
+          <div class="var-card">
+            <div class="var-name">Idiolects</div>
+            <div class="var-body">
+              <p>The unique form of language used by an individual — personal preferences in word choice, pronunciation, and sentence structure, reflecting a person's background, experiences, and personality.</p>
+              <p><em>"you know," "like"</em> — filler words one person uses frequently while another avoids them entirely. Some individuals also have distinctively their own phrases or expressions.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer>
+      Field notes compiled for study — Introduction to Natural Language Processing, Lessons 1–3.
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  // ---------- Scroll-spy navigation ----------
+  const sections = document.querySelectorAll('section.part');
+  const links = document.querySelectorAll('.toc a');
+  const spy = () => {
+    let current = sections[0]?.id;
+    const scrollPos = window.scrollY + 140;
+    sections.forEach(sec => {
+      if (sec.offsetTop <= scrollPos) current = sec.id;
+    });
+    links.forEach(a => a.classList.toggle('active', a.dataset.target === current));
+  };
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
+
+  // ---------- Ambiguity tabs ----------
+  const ambTabs = document.querySelectorAll('.amb-tab');
+  const ambPanels = document.querySelectorAll('.amb-panel');
+  ambTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      ambTabs.forEach(t => t.classList.remove('active'));
+      ambPanels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelector('.amb-panel[data-type="' + tab.dataset.type + '"]').classList.add('active');
+    });
+  });
+
+  // ---------- Hero tokenizer demo ----------
+  const sentences = [
+    {
+      tokens: [
+        {t:"I", pos:"PRON"}, {t:"saw", pos:"VERB"}, {t:"her", pos:"PRON"}, {t:"duck", pos:"?", hot:true}, {t:".", pos:"PUNCT"}
+      ],
+      readings: [
+        { label: "Reading A", text: "\u201cDuck\u201d as a verb — she quickly lowered her head to avoid something." },
+        { label: "Reading B", text: "\u201cDuck\u201d as a noun — I saw the bird that belongs to her." }
+      ]
+    },
+    {
+      tokens: [
+        {t:"He", pos:"PRON"}, {t:"found", pos:"VERB"}, {t:"his", pos:"PRON"}, {t:"train", pos:"?", hot:true}, {t:"in", pos:"ADP"}, {t:"the", pos:"DET"}, {t:"pen", pos:"?", hot:true}, {t:".", pos:"PUNCT"}
+      ],
+      readings: [
+        { label: "Reading A", text: "A toy train inside a writing pen — an odd but literal image." },
+        { label: "Reading B", text: "A toy train inside a small enclosure (a playpen)." },
+        { label: "Reading C", text: "A full-size train, somehow inside an enclosure large enough to hold it." }
+      ]
+    },
+    {
+      tokens: [
+        {t:"The", pos:"DET"}, {t:"bank", pos:"?", hot:true}, {t:"was", pos:"VERB"}, {t:"steep", pos:"ADJ"}, {t:"by", pos:"ADP"}, {t:"the", pos:"DET"}, {t:"bank", pos:"?", hot:true}, {t:".", pos:"PUNCT"}
+      ],
+      readings: [
+        { label: "Reading A", text: "The riverbank sloped steeply, right next to a financial bank building." },
+        { label: "Reading B", text: "Both instances mean riverbank — one side of the river was steep near a bend." }
+      ]
+    }
+  ];
+
+  const tokenRow = document.getElementById('tokenRow');
+  const readingToggle = document.getElementById('readingToggle');
+  const readingOut = document.getElementById('readingOut');
+  const picker = document.getElementById('sentencePicker');
+
+  function renderSentence(idx){
+    const data = sentences[idx];
+    tokenRow.innerHTML = '';
+    data.tokens.forEach(tok => {
+      const el = document.createElement('div');
+      el.className = 'token' + (tok.hot ? ' hot' : '');
+      el.innerHTML = '<span>' + tok.t + '</span><span class="pos">' + tok.pos + '</span>';
+      tokenRow.appendChild(el);
+    });
+    readingToggle.innerHTML = '';
+    data.readings.forEach((r, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'reading-btn' + (i === 0 ? ' active' : '');
+      btn.textContent = r.label;
+      btn.addEventListener('click', () => {
+        readingToggle.querySelectorAll('.reading-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        readingOut.textContent = r.text;
+      });
+      readingToggle.appendChild(btn);
+    });
+    readingOut.textContent = data.readings[0].text;
+  }
+
+  picker.addEventListener('change', () => renderSentence(parseInt(picker.value, 10)));
+  renderSentence(0);
+</script>
+
+</body>
+</html>
